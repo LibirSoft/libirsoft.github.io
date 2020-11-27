@@ -1,0 +1,242 @@
+* {
+
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+
+}
+
+
+html {
+
+    font-size: 10px;
+}
+
+body {
+
+
+    font-size: 1.6rem;
+    font-weight: 400;
+    line-height: 1, 5;
+
+
+    background: url(Images/Nebula3.jpg), rgba(0, 0, 0, 0.60);
+    background-blend-mode: overlay;
+
+    background-attachment: fixed;
+
+    background-size: cover;
+
+}
+#particles-js {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: -10;
+    top: 0;
+    left: 0
+}
+#particles-js canvas {
+    display: block;
+    vertical-align: bottom;
+    -webkit-transform: scale(1);
+    -ms-transform: scale(1);
+    transform: scale(1);
+    opacity: 1;
+    -webkit-transition: opacity .8s ease, -webkit-transform 1.4s ease;
+    transition: opacity .8s ease, transform 1.4s ease
+}
+/*
+Navbar
+*/
+ul {
+    list-style-type: none;
+}
+
+nav {
+    color: white;
+    position: fixed;
+    width: 100%;
+    line-height: 3rem;
+    z-index: 500;
+   
+transition: 0.3s;
+}
+
+nav.sticky {
+
+    background-color: rgba(0, 0, 0, 0.3);
+    transition: 0.3s;
+   
+
+}
+
+.buttons {
+    margin: 0;
+    padding-right: 4.2rem;
+
+    float: right;
+
+}
+
+.nav-item {
+    float: left;
+    display: inline-block;
+   
+    margin: 0.4rem;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: white;
+    font-family: 'Inconsolata', monospace;
+    font-weight: 700;
+    font-size: 1.6rem;
+    display: inline-block;
+    padding: 1.6rem 3.2rem;
+    transition: background 0.4s, box-shadow 0.4s;
+    
+
+}
+
+.nav-link:hover {
+
+    background: rgba(255, 255, 255, 1);
+    color: black;
+    box-shadow: 5px 10px rgba(0, 189, 179, 1);
+
+
+
+}
+
+/*
+
+Header
+*/
+.logo {
+    height: 4.8ram;
+    float: left;
+    margin: 1.6rem 4.8rem;
+    font-family: 'Inconsolata', monospace;
+    color: white;
+    font-size: 3.6rem;
+    font-weight: bold;
+
+}
+
+header {
+    height: 120rem;
+    padding-top: calc(112px + 6rem);
+    text-align: center;
+    padding-bottom: 112px;
+
+}
+
+
+.text {
+
+    color: white;
+
+
+
+}
+
+.logo-libir {
+    font-family: 'Inconsolata', monospace;
+    color: white;
+    font-size: 12rem;
+    padding-top: 10rem;
+
+}
+
+.catchword {
+    padding-top: 2rem;
+    font-family: 'Inconsolata', sans-serif;
+    color: white;
+    font-size: 3.2rem;
+
+
+}
+
+.codeline {
+    border: none;
+    border-top: .4rem solid #fff;
+    max-width: 65rem;
+    margin: 2.5rem auto;
+    overflow: visible;
+    height: 0;
+
+
+}
+
+.codeline::after {
+    content: '\f121';
+    font-family: FontAwesome;
+    color: white;
+    font-size: 3.2rem;
+    position: relative;
+    top: 0.5rem;
+
+}
+/* Abaout section*/
+
+.about {
+    height: 60rem;
+    padding-top: 10rem;
+    padding-bottom: 10rem;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.3);
+
+}
+
+.aboutline {
+    border: none;
+    border-top: .4rem solid #fff;
+    max-width: 65rem;
+    margin: 2.5rem auto;
+    overflow: visible;
+    height: 0;
+    margin-bottom: 4rem;
+  
+
+}
+
+.aboutline::after {
+    content: ' Hakkımda';
+    font-family: FontAwesome;
+    color: white;
+    font-family: 'Inconsolata', sans-serif;
+    font-size: 3.2rem;
+    position: relative;
+    top: -6rem;
+    padding: 0 0.5rem;
+
+
+}
+
+.text {
+    color: white;
+    font-family: 'Inconsolata', sans-serif;
+    font-weight: 300;
+    font-size: 1.6rem;
+    padding-bottom: 3rem;
+    width: 75%;
+    float: left;
+    text-align: left;
+    padding-left: 2rem;
+    margin-top: 5rem;
+
+}
+
+.photo {
+
+    height: 25rem;
+    float: left;
+    background-size: 100%;
+    background-repeat: no-repeat;
+
+    border: 3px solid rgba(256, 256, 256, 0.7);
+    border-radius: 50%;
+    margin-top: -4rem;
+    margin-left: 1rem;
+}
