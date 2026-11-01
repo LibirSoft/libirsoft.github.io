@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LibirSoft · libir.dev</title>
+  <meta name="description" content="LibirSoft: developer and creator of AsenaJS, an IoC web framework for Bun. Now building a JavaScript runtime for AI agents and fine-tuning models. Frameworks, runtimes, realtime systems and a few toys.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.libir.dev/">
+  <meta property="og:title" content="LibirSoft · libir.dev">
+  <meta property="og:description" content="I build the things other developers build on.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Hide the page for the intro only when JS runs; if the module never boots, show everything.
+    document.documentElement.classList.add('js', 'intro');
+    setTimeout(function () {
+      if (!window.__libirBooted) document.documentElement.classList.remove('js', 'intro');
+    }, 3500);
+  </script>
+  <link rel="modulepreload" href="js/engine.js">
+  <link rel="modulepreload" href="js/renderer.js">
+  <link rel="modulepreload" href="js/sampler.js">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <canvas id="cosmos" aria-hidden="true"></canvas>
+  <div class="nebula" aria-hidden="true"></div>
+  <div class="fx" aria-hidden="true"><div class="halo"></div><div class="flash"></div><div class="shock"></div></div>
+
+  <header class="topbar">
+    <a class="brand" href="#hero" aria-label="libir.dev, back to top">libir<span>.dev</span></a>
+    <nav aria-label="Sections">
+      <a href="#story">story</a>
+      <a href="#work">work</a>
+      <a href="#asena">asena</a>
+      <a href="#now">now</a>
+      <a href="#lab">lab</a>
+      <a href="#contact">contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ───────────────────────── hero ───────────────────────── -->
+    <section id="hero" class="section hero" data-section>
+      <div class="wrap">
+        <p class="kicker reveal" style="--i:0">// hello, world. again.</p>
+        <h1 class="title title-hero ghost" data-form="text" aria-label="LibirSoft"><span>Libir</span><span>Soft</span></h1>
+        <p class="lede reveal" style="--i:1">I build the things other developers build&nbsp;on.</p>
+        <p class="sub reveal" style="--i:2">Creator of <a href="#asena">AsenaJS</a>, an IoC web framework for Bun. Lately: a <a href="#now">runtime for AI agents</a> and fine-tuned models of my own. Plus a lifelong weakness for particles.</p>
+      </div>
+      <a class="scroll-cue reveal" style="--i:3" href="#story" aria-label="Scroll down"><span></span></a>
+    </section>
+
+    <!-- ───────────────────────── story ───────────────────────── -->
+    <section id="story" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">01 / origin</p>
+        <h2 class="title ghost" data-form="text">Six years later</h2>
+        <div class="story">
+          <div class="prose">
+            <p class="reveal" style="--i:1">In November 2020 I put the first version of this page online. I was writing simple Java and Node.js and taking my first steps into front-end. It had a nebula wallpaper, a borrowed particle library and exactly one sentence of copy: <em>&ldquo;Kod yazmay&#305; severim.&rdquo;</em> I like writing code.</p>
+            <p class="reveal" style="--i:2">The drifting dots in the background were my favourite part. They still are, so this time I wrote the particles myself. Somewhere in between, I also wrote my own framework.</p>
+          </div>
+          <ol class="timeline" data-form="spine">
+            <li class="reveal" style="--i:1"><span class="tl-dot" data-form="dot"></span><time>2016</time><p>Opened a GitHub account. Mostly watched.</p></li>
+            <li class="reveal" style="--i:2"><span class="tl-dot" data-form="dot"></span><time>2018</time><p><code>helloworld</code>. Everyone starts somewhere.</p></li>
+            <li class="reveal" style="--i:3"><span class="tl-dot" data-form="dot"></span><time>2020</time><p>This site, v1. A nebula, particles.js and a catchphrase from the 41st millennium.</p></li>
+            <li class="reveal" style="--i:4"><span class="tl-dot" data-form="dot"></span><time>2021</time><p>Took a very, very simple C++ game engine apart, built a Flappy Bird clone and wrote hexball emoji scripts, for fun.</p></li>
+            <li class="reveal" style="--i:5"><span class="tl-dot" data-form="dot"></span><time>2022</time><p><code>deep-equal</code> for Deno, and an encoder that speaks binary in &#x1F525; and &#x1F9CA;.</p></li>
+            <li class="reveal" style="--i:6"><span class="tl-dot" data-form="dot"></span><time>2024</time><p>UlakJS, my way of using socket.io. Then, in August, the first commit of AsenaJS.</p></li>
+            <li class="reveal" style="--i:7"><span class="tl-dot" data-form="dot"></span><time>2025</time><p>A dumb little orbit game, and an HTTP/1.1 server from scratch in Zig, to see what lives under the abstractions.</p></li>
+            <li class="reveal" style="--i:8"><span class="tl-dot" data-form="dot"></span><time>2026</time><p>Asena grows into an ecosystem: adapters, auth, Redis, Kafka, OpenTelemetry, OpenAPI, a CLI and benchmarks. And this page, v2.</p></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── work ───────────────────────── -->
+    <section id="work" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">02 / craft</p>
+        <h2 class="title ghost" data-form="text">What I do</h2>
+        <p class="lede-s reveal" style="--i:1">Mostly backend, mostly TypeScript on Bun, and usually one layer deeper than strictly necessary.</p>
+        <div class="cards cards-4">
+          <article class="card reveal" style="--i:2" data-form="corners">
+            <span class="card-idx">a</span>
+            <h3>Frameworks</h3>
+            <p>IoC containers, automatic component discovery, field-based dependency injection and decorator-driven APIs. The Spring Boot feeling, rebuilt for TypeScript on Bun.</p>
+            <ul class="tags"><li>IoC</li><li>DI</li><li>decorators</li></ul>
+          </article>
+          <article class="card reveal" style="--i:3" data-form="corners">
+            <span class="card-idx">b</span>
+            <h3>Close to the runtime</h3>
+            <p>A native Bun HTTP and WebSocket adapter with zero runtime dependencies. An epoll-based HTTP/1.1 server in Zig, written from scratch to see how the wire really works.</p>
+            <ul class="tags"><li>Bun</li><li>Zig</li><li>HTTP</li></ul>
+          </article>
+          <article class="card reveal" style="--i:4" data-form="corners">
+            <span class="card-idx">c</span>
+            <h3>Realtime &amp; distributed</h3>
+            <p>WebSocket namespaces, multi-pod transports over Redis, microservices over Redis Streams and Kafka, and a 60&nbsp;Hz server-authoritative game loop for multiplayer Pong.</p>
+            <ul class="tags"><li>WebSocket</li><li>Redis</li><li>Kafka</li></ul>
+          </article>
+          <article class="card reveal" style="--i:5" data-form="corners">
+            <span class="card-idx">d</span>
+            <h3>Tooling &amp; proof</h3>
+            <p>CLIs and scaffolding, OpenAPI generation, OpenTelemetry tracing, adapter conformance suites, and benchmarks pinned to an isolated CPU core. If I say it is fast, there is a wrk run behind it.</p>
+            <ul class="tags"><li>CLI</li><li>OpenAPI</li><li>OTel</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── asena ───────────────────────── -->
+    <section id="asena" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">03 / the framework</p>
+        <h2 class="title ghost" data-form="text">AsenaJS</h2>
+        <div class="asena">
+          <div class="asena-copy">
+            <p class="lede-s reveal" style="--i:1">A high-performance IoC web framework for Bun, bringing Spring Boot's automatic component discovery and field-based dependency injection to TypeScript. Controllers, services, middleware and WebSockets are plain decorated classes; the HTTP layer is a pluggable adapter.</p>
+            <ul class="stats reveal" style="--i:2">
+              <li><b>100+</b><span>stars on the core</span></li>
+              <li><b>15</b><span>repositories</span></li>
+              <li><b>2</b><span>HTTP adapters</span></li>
+              <li><b>MIT</b><span>licensed</span></li>
+            </ul>
+            <pre class="code reveal" style="--i:3" aria-label="AsenaJS example"><code><span class="d">@Service</span>()
+<span class="k">class</span> <span class="t">GreetingService</span> {
+  <span class="f">greet</span>(name: <span class="t">string</span>) {
+    <span class="k">return</span> <span class="s">`Hello ${name}`</span>;
+  }
+}
+
+<span class="d">@Controller</span>(<span class="s">'/'</span>)
+<span class="k">class</span> <span class="t">HelloController</span> {
+  <span class="d">@Inject</span>(<span class="t">GreetingService</span>)
+  <span class="k">private</span> greetingService: <span class="t">GreetingService</span>;
+
+  <span class="d">@Get</span>(<span class="s">'/'</span>)
+  <span class="k">async</span> <span class="f">hello</span>(context: <span class="t">Context</span>) {
+    <span class="k">return</span> context.<span class="f">send</span>(<span class="k">this</span>.greetingService.<span class="f">greet</span>(<span class="s">'asena'</span>));
+  }
+}</code></pre>
+            <p class="links reveal" style="--i:4"><a href="https://asena.sh" rel="noopener">asena.sh &#8599;</a><a href="https://github.com/AsenaJs/Asena" rel="noopener">source &#8599;</a></p>
+          </div>
+          <div class="constellation reveal" style="--i:2" id="constellation" role="group" aria-label="The AsenaJS ecosystem">
+            <svg class="ghost" aria-hidden="true"></svg>
+            <a class="node core" href="https://github.com/AsenaJs/Asena" title="The IoC core"><span class="dot" data-form="dot"></span><span class="label">asena</span></a>
+            <a class="node" href="https://github.com/AsenaJs/ergenecore" title="Native Bun HTTP and WebSocket adapter, zero runtime dependencies"><span class="dot" data-form="dot"></span><span class="label">ergenecore</span></a>
+            <a class="node" href="https://github.com/AsenaJs/hono-adapter" title="Hono-based HTTP and WebSocket adapter"><span class="dot" data-form="dot"></span><span class="label">hono-adapter</span></a>
+            <a class="node" href="https://github.com/AsenaJs/Asena-cli" title="Scaffold, generate, run and bundle"><span class="dot" data-form="dot"></span><span class="label">cli</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-auth" title="Sessions, guards, CSRF and WebSocket auth"><span class="dot" data-form="dot"></span><span class="label">auth</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-drizzle" title="Drizzle ORM repositories and transactions"><span class="dot" data-form="dot"></span><span class="label">drizzle</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-redis" title="Redis client, multi-pod WebSockets, Streams transport"><span class="dot" data-form="dot"></span><span class="label">redis</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-kafka" title="Kafka client and microservice transport"><span class="dot" data-form="dot"></span><span class="label">kafka</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-otel" title="OpenTelemetry tracing and metrics"><span class="dot" data-form="dot"></span><span class="label">otel</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-openapi" title="OpenAPI 3.1 generation with Scalar or Swagger UI"><span class="dot" data-form="dot"></span><span class="label">openapi</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-logger" title="Colored, timestamped logging"><span class="dot" data-form="dot"></span><span class="label">logger</span></a>
+            <a class="node" href="https://github.com/AsenaJs/asena-test-suite" title="Adapter conformance tests"><span class="dot" data-form="dot"></span><span class="label">test-suite</span></a>
+            <a class="node" href="https://github.com/AsenaJs/benchmark" title="Eight framework setups, one frozen contract, wrk on an isolated core"><span class="dot" data-form="dot"></span><span class="label">benchmark</span></a>
+            <a class="node" href="https://github.com/AsenaJs/skills" title="Agent skills that teach AI assistants to write AsenaJS"><span class="dot" data-form="dot"></span><span class="label">skills</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── now ───────────────────────── -->
+    <section id="now" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">04 / right now</p>
+        <h2 class="title ghost" data-form="text">Right now</h2>
+        <p class="lede-s reveal" style="--i:1">Outside the framework, two things have most of my attention.</p>
+        <div class="cards cards-2">
+          <article class="card now-card reveal" style="--i:2" data-form="corners">
+            <p class="status"><span class="pulse"></span>building</p>
+            <h3>A runtime for agents</h3>
+            <p>A minimal JavaScript runtime made for AI agents. The future runs on distributed agents, and someone has to manage them and give them environments that actually fit them. That is what I am building.</p>
+            <ul class="tags"><li>runtime</li><li>agents</li><li>distributed</li></ul>
+          </article>
+          <article class="card now-card reveal" style="--i:3" data-form="corners">
+            <p class="status"><span class="pulse"></span>training</p>
+            <h3>Models &amp; workflows</h3>
+            <p>I fine-tune my own models and keep thinking up and building new workflows around them. I also share AI skills in the open, like the ones that teach coding assistants to write <a href="https://github.com/AsenaJs/skills" rel="noopener">AsenaJS&nbsp;&#8599;</a></p>
+            <ul class="tags"><li>fine-tuning</li><li>workflows</li><li>skills</li></ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── lab ───────────────────────── -->
+    <section id="lab" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">05 / projects</p>
+        <h2 class="title ghost" data-form="text">The lab</h2>
+        <p class="lede-s reveal" style="--i:1">Everything here runs on Asena, or helps Asena run.</p>
+        <div class="cards cards-3">
+          <a class="card proj reveal" style="--i:2" data-form="corners" href="https://github.com/LibirSoft/asena-peer-pong" rel="noopener">
+            <span class="lang">typescript</span><h3>asena-peer-pong</h3>
+            <p>Online multiplayer Pong on AsenaJS. Physics run on the server at 60&nbsp;Hz, players find each other over UDP on the same network.</p>
+          </a>
+          <a class="card proj reveal" style="--i:3" data-form="corners" href="https://github.com/LibirSoft/AsenaExample" rel="noopener">
+            <span class="lang">typescript</span><h3>AsenaExample</h3>
+            <p>A production-shaped Todo and chat app: JWT auth, Zod validation, OpenAPI docs, Drizzle with declarative transactions, and WebSocket rooms.</p>
+          </a>
+          <a class="card proj reveal" style="--i:4" data-form="corners" href="https://github.com/AsenaJs/benchmark" rel="noopener">
+            <span class="lang">typescript</span><h3>benchmark</h3>
+            <p>Eight framework setups, twelve app and runtime targets, one frozen contract with byte-identical responses, and wrk on an isolated CPU core.</p>
+          </a>
+          <a class="card proj reveal" style="--i:5" data-form="corners" href="https://github.com/AsenaJs/skills" rel="noopener">
+            <span class="lang">agent skills</span><h3>skills</h3>
+            <p>Skills that teach AI coding assistants like Claude Code, Cursor, Copilot and Windsurf to write correct AsenaJS code.</p>
+          </a>
+          <a class="card proj reveal" style="--i:6" data-form="corners" href="https://github.com/AsenaJs/asena-test-suite" rel="noopener">
+            <span class="lang">typescript</span><h3>asena-test-suite</h3>
+            <p>One conformance suite for every HTTP adapter: routing, errors, middleware, validation, streaming, WebSocket and lifecycle.</p>
+          </a>
+          <a class="card proj reveal" style="--i:7" data-form="corners" href="https://asena.sh" rel="noopener">
+            <span class="lang">docs</span><h3>asena.sh</h3>
+            <p>The documentation site: guides, adapters, packages, testing, migration notes, benchmarks and a generated llms.txt.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── contact ───────────────────────── -->
+    <section id="contact" class="section contact" data-section>
+      <div class="wrap center">
+        <button id="singularity" class="singularity" type="button" data-form="sphere" aria-label="Collapse the universe and start over"><span class="orb ghost"></span></button>
+        <p class="kicker reveal">06 / end of the universe</p>
+        <h2 class="title-s reveal" style="--i:1">Say hi.</h2>
+        <p class="lede-s reveal" style="--i:2">GitHub is the best way to reach me. Issues, pull requests, stars and strange ideas are all welcome.</p>
+        <p class="links big reveal" style="--i:3">
+          <a href="https://github.com/LibirSoft" rel="noopener">github.com/LibirSoft &#8599;</a>
+          <a href="https://github.com/AsenaJs" rel="noopener">github.com/AsenaJs &#8599;</a>
+          <a href="https://asena.sh" rel="noopener">asena.sh &#8599;</a>
+        </p>
+        <p class="hint reveal" style="--i:4">psst. the singularity is clickable.</p>
+      </div>
+      <footer class="foot">
+        <span>&copy; 2026 LibirSoft</span>
+        <span>Written from scratch. No libraries, just <span id="pcount">a few thousand</span> particles and some springs.</span>
+        <span class="egg" title="for the Emperor">The Codex Astartes does not support this action.</span>
+      </footer>
+    </section>
+  </main>
+</body>
+</html>
