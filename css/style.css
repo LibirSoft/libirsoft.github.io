@@ -245,6 +245,7 @@ html:not(.js) .timeline::before, html.reduced .timeline::before { opacity: 1; }
 html:not(.js) .tl-dot, html.reduced .tl-dot { opacity: 1; }
 .timeline time { font-family: var(--mono); font-size: 13px; color: var(--accent); display: block; line-height: 1.9; }
 .timeline p { color: var(--text); font-size: 16px; }
+.timeline a { color: var(--fg); text-decoration-color: var(--accent); text-underline-offset: 3px; }
 
 /* ─────────────────────────────── cards ─────────────────────────────── */
 .cards { display: grid; gap: clamp(14px, 2vw, 22px); margin-top: clamp(28px, 4vw, 48px); }
