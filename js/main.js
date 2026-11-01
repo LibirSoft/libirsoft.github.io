@@ -21,7 +21,9 @@ const singularity = document.getElementById('singularity');
 const constellation = document.getElementById('constellation');
 const topbar = document.querySelector('.topbar');
 let topbarScrolled = false;
+let lastScrollAt = 0;
 addEventListener('scroll', () => {
+  lastScrollAt = performance.now();
   const scrolled = window.scrollY > 24;
   if (scrolled !== topbarScrolled) { topbarScrolled = scrolled; topbar.classList.toggle('scrolled', scrolled); }
 }, { passive: true });
@@ -39,23 +41,32 @@ let edges = [];
 
 /* ───────────────────────────── budget ───────────────────────────── */
 
+// Phones and tablets run out of GPU fill rate long before the CPU is busy: every
+// particle is a blended quad, and the canvas covers the whole (high-DPI) screen.
+const touch = matchMedia('(pointer: coarse)').matches;
+
 function budget() {
   const forced = parseInt(params.get('particles'), 10);
   if (forced > 0) return Math.min(40000, forced);
   const area = innerWidth * innerHeight;
   let n = area > 1.3e6 ? 26000 : area > 7e5 ? 20000 : 12000;
-  if ((navigator.hardwareConcurrency || 8) <= 4) n = Math.round(n * 0.7);
-  return n;
+  if ((navigator.hardwareConcurrency || 8) <= 4) n *= 0.7;
+  if (touch) n *= 0.65;
+  return Math.round(n);
 }
 
 const engine = new Cosmos(canvas, budget());
 if (engine.kind === '2d') engine.setActive(Math.min(engine.N, 4000));
 document.getElementById('pcount').textContent = engine.active.toLocaleString('en-US');
 
+// Canvas resolution. The particles are soft glows, so 1.5x is visually free on a phone
+// and costs ~45% less fill than 2x. Adaptive quality may lower it further.
+let dprCap = touch || innerWidth < 640 ? 1.5 : 2;
+const canvasDpr = () => Math.min(dprCap, window.devicePixelRatio || 1);
+
 function viewport() {
   const r = ((engine.renderer && engine.renderer.canvas) || canvas).getBoundingClientRect();
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  engine.setViewport(r.width || innerWidth, r.height || innerHeight, dpr);
+  engine.setViewport(r.width || innerWidth, r.height || innerHeight, canvasDpr());
   fx.style.setProperty('--r', `${engine.intro.R}px`);
 }
 
@@ -372,6 +383,28 @@ function dominant() {
 const smooth = (a, b, x) => { const t = x <= a ? 0 : x >= b ? 1 : (x - a) / (b - a); return t * t * (3 - 2 * t); };
 let heroReveal = 0;
 const shownO = sections.map(() => -1);
+const fadeEls = sections.map((s) => [...s.children]);
+const layered = sections.map(() => false);
+
+/** Opacity goes straight onto the section's children (no inherited variable, so no subtree restyle). */
+function setSectionOpacity(i, o) {
+  const v = o.toFixed(3);
+  // only while a fade is running is the content its own GPU layer: the fade is then
+  // compositor-only instead of a repaint of the section's text on every frame
+  const mid = o > 0 && o < 1;
+  for (const el of fadeEls[i]) {
+    el.style.opacity = v;
+    if (mid !== layered[i]) el.style.willChange = mid ? 'opacity' : '';
+  }
+  layered[i] = mid;
+}
+
+function clearSectionOpacity() {
+  fadeEls.forEach((els, i) => {
+    for (const el of els) { el.style.opacity = ''; el.style.willChange = ''; }
+    layered[i] = false; shownO[i] = -1;
+  });
+}
 
 /**
  * How solid each section's DOM content is. It dissolves as its particles start to
@@ -392,9 +425,9 @@ function applyOpacity(dt) {
     if (i === HERO) o *= heroReveal;
     const F = engine.formations[i];
     if (F) F.bodyVis = 1 - o;
-    if (Math.abs(o - shownO[i]) > 0.004 || (o === 0) !== (shownO[i] === 0)) {
+    if (Math.abs(o - shownO[i]) > 0.004 || (o === 0) !== (shownO[i] === 0) || (o === 1) !== (shownO[i] === 1)) {
       shownO[i] = o;
-      sections[i].style.setProperty('--o', o.toFixed(3));
+      setSectionOpacity(i, o);
       sections[i].classList.toggle('is-faded', o < 0.5);
     }
   }
@@ -452,7 +485,11 @@ singularity.addEventListener('click', () => {
 /* ───────────────────────────── loop ───────────────────────────── */
 
 let last = performance.now();
-let perf = { frames: 0, acc: 0, fps: 60, checked: false, liveChecked: false, liveAcc: 0, liveFrames: 0 };
+const perf = {
+  frames: 0, acc: 0, fps: 60, checked: false,
+  intro: [], base: 1000 / 60,          // frame interval this device manages when the work is light (ms)
+  win: 0, winN: 0, winJank: 0, bad: 0, settle: 0, pendingCut: false, steps: 0,
+};
 
 function loop(now) {
   const raw = (now - last) / 1000;
@@ -469,36 +506,87 @@ function loop(now) {
   engine.step(dt);
   engine.render();
   updateSections();
-  adapt(raw);
+  adapt(raw, now);
   if (!degraded) requestAnimationFrame(loop);
 }
 let degraded = false;
 
-// Drop particles once if this machine can't keep up. Skipped when ?particles= is set.
-function adapt(raw) {
+/* ───────────────────────────── adaptive quality ───────────────────────────── */
+
+// The expensive moments are the scroll transitions (thousands of streaking particles),
+// not the calm hero, so quality is watched for the whole visit, in 1.5 s windows.
+// A slow window first lowers the canvas resolution (instant, nothing to rebuild);
+// only repeated slow windows cut particles, which needs a rebuild and therefore waits
+// until the visitor stops scrolling. Skipped when ?particles= is set.
+const MIN_PARTICLES = 3000;
+const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s[s.length >> 1]; };
+
+function updateCount() {
+  document.getElementById('pcount').textContent = engine.active.toLocaleString('en-US');
+}
+
+function setDpr(v) {
+  dprCap = v;
+  viewport();
+  perf.settle = 0.6;
+  perf.steps++;
+}
+
+function cutParticles() {
+  engine.setActive(engine.active * 0.7);
+  rebuild();
+  updateCount();
+  perf.settle = 1;
+  perf.steps++;
+}
+
+function adapt(raw, now) {
   if (params.has('particles') || raw > 0.25) return;
   perf.acc += raw; perf.frames++;
   if (perf.frames >= 30) { perf.fps = perf.frames / perf.acc; perf.acc = 0; perf.frames = 0; }
-  const capped = perf.fps > 27 && perf.fps < 32;   // Low Power Mode / Energy Saver
-  if (!perf.checked && engine.phase === 'intro' && engine.time > 1.2 && perf.fps < 40 && !capped) {
-    perf.checked = true;
-    engine.setActive(engine.active * 0.6);
-    engine.startIntro();
-    if (ready) rebuild();
-    document.getElementById('pcount').textContent = engine.active.toLocaleString('en-US');
-  }
-  if (engine.phase === 'live' && !perf.liveChecked) {
-    perf.liveAcc += raw; perf.liveFrames++;
-    if (perf.liveAcc > 3) {
-      perf.liveChecked = true;
-      const fps = perf.liveFrames / perf.liveAcc;
-      if (fps < 38 && !(fps > 27 && fps < 32) && engine.active > 3000) {
-        engine.setActive(engine.active * 0.65);
-        rebuild();
-        document.getElementById('pcount').textContent = engine.active.toLocaleString('en-US');
-      }
+
+  if (engine.phase === 'intro') {
+    if (engine.time > 0.4 && perf.intro.length < 300) perf.intro.push(raw * 1000);
+    const capped = perf.fps > 27 && perf.fps < 32;   // Low Power Mode / Energy Saver
+    if (!perf.checked && engine.time > 1.2 && perf.fps < 40 && !capped) {
+      perf.checked = true;
+      perf.intro.length = 0;   // measure the display again with the lighter load
+      engine.setActive(engine.active * 0.6);
+      engine.startIntro();
+      if (ready) rebuild();
+      updateCount();
     }
+    return;
   }
+  if (engine.phase !== 'live') return;
+  if (perf.intro) {
+    // the light intro shows what this device's display does: 60, 120, or a 30 Hz power-save cap
+    if (perf.intro.length >= 20) perf.base = Math.max(1000 / 165, median(perf.intro));
+    perf.intro = null;
+  }
+  if (perf.pendingCut) {
+    if (now - lastScrollAt > 350) { perf.pendingCut = false; cutParticles(); }
+    return;
+  }
+  if (perf.settle > 0) { perf.settle -= raw; return; }
+
+  const ms = raw * 1000;
+  perf.win += raw; perf.winN++;
+  if (ms > Math.max(perf.base * 1.8, 26)) perf.winJank++;
+  if (perf.win < 1.5) return;
+  const mean = (perf.win * 1000) / perf.winN;
+  // slow: well below what this display does when idle and under ~52 fps, or visibly stuttering
+  const slow = mean > Math.max(perf.base * 1.3, 19) || perf.winJank / perf.winN > 0.12;
+  perf.win = 0; perf.winN = 0; perf.winJank = 0;
+  perf.bad = slow ? perf.bad + 1 : 0;
+  if (!slow) return;
+
+  const dpr = canvasDpr();
+  if (dpr > 1.25) { setDpr(dpr > 1.5 ? 1.5 : 1.25); return; }
+  if (perf.bad < 2) return;
+  perf.bad = 0;
+  if (engine.active > MIN_PARTICLES) perf.pendingCut = true;
+  else if (dpr > 1) setDpr(1);
 }
 
 /* ───────────────────────────── boot ───────────────────────────── */
@@ -569,6 +657,7 @@ async function boot() {
       // if the GPU doesn't come back, fall back to the plain page instead of an empty one
       lostTimer = setTimeout(() => {
         degraded = true;
+        clearSectionOpacity();
         root.classList.add('reduced', 'live');
         root.classList.remove('intro');
       }, 2000);
@@ -620,6 +709,8 @@ Object.defineProperty(window, '__libir', {
     get segment() { return [sections[engine.segA]?.id, sections[engine.segB]?.id, +engine.segP.toFixed(3)]; },
     get fps() { return Math.round(perf.fps); },
     get particles() { return engine.active; },
+    get dpr() { return canvasDpr(); },
+    get quality() { return { steps: perf.steps, base: +perf.base.toFixed(1), pendingCut: perf.pendingCut }; },
     get drawn() { return engine.drawn; },
     get formed() { return +engine.formed.toFixed(3); },
     get renderer() { return engine.kind; },
@@ -630,3 +721,14 @@ Object.defineProperty(window, '__libir', {
 });
 // raw engine access for debugging; non-enumerable so JSON snapshots of __libir stay small
 Object.defineProperty(window.__libir, 'engine', { get: () => engine, enumerable: false });
+
+// ?debug: a small readout, for checking the adaptive quality on a real phone
+if (params.has('debug')) {
+  const hud = document.createElement('div');
+  hud.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:20;pointer-events:none;font:11px/1.4 var(--mono);color:#7fe8e0;background:rgba(0,0,0,.7);padding:4px 7px;border-radius:4px';
+  document.body.append(hud);
+  setInterval(() => {
+    const c = (engine.renderer && engine.renderer.canvas) || canvas;
+    hud.textContent = `${Math.round(perf.fps)} fps · ${engine.active} particles · dpr ${canvasDpr()} · ${c.width}×${c.height} · step ${perf.steps}`;
+  }, 500);
+}

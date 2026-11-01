@@ -79,6 +79,8 @@ code { font-family: var(--mono); font-size: 0.88em; color: var(--fg); }
   animation: drift 60s ease-in-out infinite alternate;
 }
 html.live .nebula, html:not(.js) .nebula { opacity: 1; }
+/* a 60 s drift nobody notices on a phone; spare its GPU the moving full-screen layer */
+@media (pointer: coarse) { .nebula { animation: none; } }
 @keyframes drift {
   from { transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1); }
   to   { transform: translate3d(2%, 1.5%, 0) rotate(6deg) scale(1.08); }
@@ -142,10 +144,17 @@ html.shake main, html.shake #cosmos { animation: shake 0.42s linear; }
 html.js:not(.live) .topbar:not(:focus-within) { opacity: 0; transform: translateY(-12px); pointer-events: none; }
 html.reduced .topbar { transition: none; }
 .topbar.scrolled {
-  background: rgba(0, 0, 0, 0.72);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.86);
   box-shadow: 0 1px 0 var(--line);
+}
+/* the canvas under the bar changes every frame, so a backdrop blur is re-computed every
+   frame too: only worth it where there is GPU to spare */
+@media (hover: hover) and (pointer: fine) {
+  .topbar.scrolled {
+    background: rgba(0, 0, 0, 0.72);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
 }
 .brand { color: var(--fg); text-decoration: none; font-weight: 600; letter-spacing: 0.02em; }
 .brand span { color: var(--accent); }
@@ -194,11 +203,12 @@ html.js .ghost { opacity: 0; }
 html:not(.js) .ghost, html.reduced .ghost { opacity: 1 !important; }
 .title.ghost, .title-hero { text-shadow: 0 0 22px rgba(255, 255, 255, 0.22); }
 
-/* section content is built by particles: the page sets --o from the scroll position,
-   so the crisp DOM text condenses as its particles land and dissolves as they leave */
-html.js:not(.reduced) .section > * { opacity: var(--o, 0); }
+/* section content is built by particles: the page sets each child's opacity from the
+   scroll position, so the crisp DOM text condenses as its particles land and dissolves
+   as they leave (inline styles, hence the !important for keyboard focus) */
+html.js:not(.reduced) .section > * { opacity: 0; }
 html.js:not(.reduced) .section.is-faded > * { pointer-events: none; }
-html.js:not(.reduced) .section:focus-within > * { opacity: 1; pointer-events: auto; }
+html.js:not(.reduced) .section:focus-within > * { opacity: 1 !important; pointer-events: auto; }
 
 /* ─────────────────────────────── hero ─────────────────────────────── */
 .hero { display: flex; align-items: center; text-align: center; padding-top: 80px; padding-bottom: 80px; }

@@ -12,6 +12,7 @@ layout(location = 2) in vec4 aColor;
 layout(location = 3) in float aSize;
 uniform vec2 uView;
 uniform float uStretch;
+uniform float uMaxStretch;
 out vec2 vUv;
 out float vLen;
 out vec4 vColor;
@@ -21,7 +22,7 @@ void main() {
   vec2 dir = sp > 0.001 ? vel / sp : vec2(1.0, 0.0);
   vec2 nrm = vec2(-dir.y, dir.x);
   float r = aSize * 2.0;
-  float stretch = min(sp * uStretch, 26.0);
+  float stretch = min(sp * uStretch, uMaxStretch);
   float halfLen = r + stretch;
   vec2 p = aPV.xy + dir * (aCorner.x * halfLen) + nrm * (aCorner.y * r);
   vec2 c = p / uView * 2.0 - 1.0;
@@ -47,6 +48,13 @@ void main() {
   float a = (core + glow) * vColor.a;
   outColor = vec4(vColor.rgb * a, a);
 }`;
+
+/** Assigning canvas.width/height reallocates the backing store even for the same value, so only touch what changed. */
+function setSize(canvas, w, h, dpr) {
+  const cw = Math.max(1, Math.round(w * dpr)), ch = Math.max(1, Math.round(h * dpr));
+  if (canvas.width !== cw) canvas.width = cw;
+  if (canvas.height !== ch) canvas.height = ch;
+}
 
 function compile(gl, type, src) {
   const s = gl.createShader(type);
@@ -74,7 +82,7 @@ function createGL(canvas) {
   } catch { gl = null; }
   if (!gl) return null;
 
-  let prog, vao, instBuf, uView, uStretch, capacity = 0;
+  let prog, vao, instBuf, uView, uStretch, uMaxStretch, capacity = 0;
   let lost = false;
   let W = 1, H = 1;
 
@@ -87,6 +95,7 @@ function createGL(canvas) {
     prog = p;
     uView = gl.getUniformLocation(p, 'uView');
     uStretch = gl.getUniformLocation(p, 'uStretch');
+    uMaxStretch = gl.getUniformLocation(p, 'uMaxStretch');
 
     vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
@@ -127,11 +136,11 @@ function createGL(canvas) {
     onRestored: null,
     resize(w, h, dpr) {
       W = w; H = h;
-      canvas.width = Math.max(1, Math.round(w * dpr));
-      canvas.height = Math.max(1, Math.round(h * dpr));
+      setSize(canvas, w, h, dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
     },
-    draw(data, count) {
+    /** maxStretch: longest motion streak in CSS px (long streaks are most of the fill cost). */
+    draw(data, count, maxStretch = 26) {
       if (lost) return;
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -139,6 +148,7 @@ function createGL(canvas) {
       gl.useProgram(prog);
       gl.uniform2f(uView, W, H);
       gl.uniform1f(uStretch, 0.0105);
+      gl.uniform1f(uMaxStretch, maxStretch);
       gl.bindVertexArray(vao);
       gl.bindBuffer(gl.ARRAY_BUFFER, instBuf);
       if (data.byteLength > capacity) {
@@ -166,8 +176,7 @@ function create2D(canvas) {
     canvas,
     resize(w, h, dpr) {
       W = w; H = h;
-      canvas.width = Math.max(1, Math.round(w * dpr));
-      canvas.height = Math.max(1, Math.round(h * dpr));
+      setSize(canvas, w, h, dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     },
     draw(data, count) {

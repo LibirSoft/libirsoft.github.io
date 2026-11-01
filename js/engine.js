@@ -81,6 +81,7 @@ export class Cosmos {
     this.phase = 'intro';
     this.intro = { cx: 0, cy: 0, R: 100, spin: 0, implodeAt: -1, scale: 1 };
     this.sizeScale = 1;
+    this.maxStretch = 26;
     this.frame = 0;
     this.drawn = 0;
   }
@@ -93,6 +94,8 @@ export class Cosmos {
     I.R = Math.max(70, Math.min(w, h) * (w < 640 ? 0.26 : 0.2));
     this.sizeScale = w < 640 ? 0.85 : 1;
     this.repel = w < 640 ? 70 : 95;
+    // in-transit streaks dominate the fill cost; a phone screen doesn't need them as long
+    this.maxStretch = w < 640 ? 13 : 26;
   }
 
   setActive(n) {
@@ -502,7 +505,7 @@ export class Cosmos {
       n++;
     }
     this.drawn = n;
-    this.renderer.draw(o, n);
+    this.renderer.draw(o, n, this.maxStretch);
   }
 }
 
