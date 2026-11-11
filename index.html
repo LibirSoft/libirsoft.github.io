@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>LibirSoft · libir.dev</title>
-  <meta name="description" content="LibirSoft: developer and creator of AsenaJS, an IoC web framework for Bun. Now building a JavaScript runtime for AI agents and fine-tuning models. Frameworks, runtimes, realtime systems and a few toys.">
+  <meta name="description" content="LibirSoft: developer and creator of AsenaJS, an IoC web framework for Bun. Also behind granny, an agent loop that turns a plan into a PR-ready branch, and a JavaScript runtime for AI agents. Frameworks, runtimes, benchmarks and realtime systems.">
   <meta name="theme-color" content="#000000">
   <meta name="color-scheme" content="dark">
   <meta property="og:type" content="website">
@@ -22,6 +22,7 @@
       if (!window.__libirBooted) document.documentElement.classList.remove('js', 'intro');
     }, 3500);
   </script>
+  <link rel="preload" href="img/asena.png" as="image">
   <link rel="modulepreload" href="js/engine.js">
   <link rel="modulepreload" href="js/renderer.js">
   <link rel="modulepreload" href="js/sampler.js">
@@ -30,17 +31,20 @@
 <body>
   <canvas id="cosmos" aria-hidden="true"></canvas>
   <div class="nebula" aria-hidden="true"></div>
-  <div class="fx" aria-hidden="true"><div class="halo"></div><div class="flash"></div><div class="shock"></div></div>
+  <div class="fx" aria-hidden="true"><div class="halo"></div><div class="flash"></div><div class="shock"></div><div class="hole"></div></div>
+  <div class="focus-ring" aria-hidden="true"></div>
 
   <header class="topbar">
     <a class="brand" href="#hero" aria-label="libir.dev, back to top">libir<span>.dev</span></a>
     <nav aria-label="Sections">
-      <a href="#story">story</a>
-      <a href="#work">work</a>
+      <a class="nv-wide" href="#story">story</a>
+      <a class="nv-mid" href="#work">work</a>
       <a href="#asena">asena</a>
-      <a href="#now">now</a>
+      <a href="#proof">proof</a>
+      <a class="nv-wide" href="#now">now</a>
+      <a href="#granny">granny</a>
       <a href="#lab">lab</a>
-      <a href="#contact">contact</a>
+      <a class="nv-wide" href="#contact">contact</a>
     </nav>
   </header>
 
@@ -51,9 +55,10 @@
         <p class="kicker reveal" style="--i:0">// hello, world. again.</p>
         <h1 class="title title-hero ghost" data-form="text" aria-label="LibirSoft"><span>Libir</span><span>Soft</span></h1>
         <p class="lede reveal" style="--i:1">I build the things other developers build&nbsp;on.</p>
-        <p class="sub reveal" style="--i:2">Creator of <a href="#asena">AsenaJS</a>, an IoC web framework for Bun. Lately: a <a href="#now">runtime for AI agents</a> and fine-tuned models of my own. Plus a lifelong weakness for particles.</p>
+        <p class="sub reveal" style="--i:2">Creator of <a href="#asena">AsenaJS</a>, an IoC web framework for Bun. Lately: a <a href="#now">runtime for AI agents</a>, an agent loop called <a href="#granny">granny</a> and fine-tuned models of my own. Plus a lifelong weakness for particles.</p>
+        <p class="hint hint-hold reveal" style="--i:3">psst. press and hold anywhere.</p>
       </div>
-      <a class="scroll-cue reveal" style="--i:3" href="#story" aria-label="Scroll down"><span></span></a>
+      <a class="scroll-cue reveal" style="--i:3" href="#story" aria-label="Scroll down" data-ink="vline"><span></span></a>
     </section>
 
     <!-- ───────────────────────── story ───────────────────────── -->
@@ -67,12 +72,13 @@
             <p class="reveal" style="--i:2">The drifting dots in the background were my favourite part. They still are, so this time I wrote the particles myself. Somewhere in between, I also wrote my own framework.</p>
           </div>
           <ol class="timeline" data-form="spine">
-            <li class="reveal" style="--i:1"><span class="tl-dot" data-form="dot"></span><time>2016</time><p>Opened a GitHub account. Mostly watched.</p></li>
+            <li class="reveal" style="--i:1"><span class="tl-dot" data-form="dot"></span><time>2016</time><p>Opened a GitHub account as the year turned. Mostly watched.</p></li>
             <li class="reveal" style="--i:2"><span class="tl-dot" data-form="dot"></span><time>2018</time><p><code>helloworld</code>. Everyone starts somewhere.</p></li>
             <li class="reveal" style="--i:3"><span class="tl-dot" data-form="dot"></span><time>2020</time><p>This site, v1. A nebula, particles.js and a catchphrase from the 41st millennium.</p></li>
             <li class="reveal" style="--i:4"><span class="tl-dot" data-form="dot"></span><time>2024</time><p><a href="https://github.com/LibirSoft/UlakJS" rel="noopener">UlakJS</a>, my way of using socket.io, wired together with decorators. The idea kept growing: in August, the first commit of AsenaJS.</p></li>
             <li class="reveal" style="--i:5"><span class="tl-dot" data-form="dot"></span><time>2025</time><p><a href="https://github.com/LibirSoft/zserver" rel="noopener">zserver</a>, an HTTP/1.1 server from scratch in Zig: epoll event loop, zero-copy parsing, keep-alive. Built to see what lives under the abstractions.</p></li>
             <li class="reveal" style="--i:6"><span class="tl-dot" data-form="dot"></span><time>2026</time><p>Asena grows into an ecosystem: adapters, auth, Redis, Kafka, OpenTelemetry, OpenAPI, a CLI and benchmarks. And this page, v2.</p></li>
+            <li class="reveal" style="--i:7"><span class="tl-dot" data-form="dot"></span><time>2026 &middot; Nov 1</time><p>One Sunday on GitHub: <a href="https://github.com/AsenaJs/asena-auth" rel="noopener">asena-auth</a>, the adapter conformance suite, the <a href="#proof">benchmark sweep</a>, this page, and the first commit of <a href="#granny">granny</a>. Eleven days later granny had 300+ more.</p></li>
           </ol>
         </div>
       </div>
@@ -118,14 +124,14 @@
       <div class="wrap">
         <p class="kicker reveal">03 / the framework</p>
         <h2 class="title ghost" data-form="text">AsenaJS</h2>
-        <div class="asena">
+        <div class="asena top">
           <div class="asena-copy">
             <p class="lede-s reveal" style="--i:1">A high-performance IoC web framework for Bun, bringing Spring Boot's automatic component discovery and field-based dependency injection to TypeScript. Controllers, services, middleware and WebSockets are plain decorated classes; the HTTP layer is a pluggable adapter.</p>
             <ul class="stats reveal" style="--i:2">
               <li><b>100+</b><span>stars on the core</span></li>
+              <li><b>300+</b><span>commits on the core</span></li>
+              <li><b>24</b><span>releases</span></li>
               <li><b>15</b><span>repositories</span></li>
-              <li><b>2</b><span>HTTP adapters</span></li>
-              <li><b>MIT</b><span>licensed</span></li>
             </ul>
             <pre class="code reveal" style="--i:3" aria-label="AsenaJS example"><code><span class="d">@Service</span>()
 <span class="k">class</span> <span class="t">GreetingService</span> {
@@ -148,7 +154,7 @@
           </div>
           <div class="constellation reveal" style="--i:2" id="constellation" role="group" aria-label="The AsenaJS ecosystem">
             <svg class="ghost" aria-hidden="true"></svg>
-            <a class="node core" href="https://github.com/AsenaJs/Asena" title="The IoC core"><span class="dot" data-form="dot"></span><span class="label">asena</span></a>
+            <a class="node core" href="https://github.com/AsenaJs/Asena" title="The IoC core"><img class="wolf ghost" data-form="mask" src="img/asena.png" width="400" height="400" alt="The AsenaJS wolf"><span class="label">asena</span></a>
             <a class="node" href="https://github.com/AsenaJs/ergenecore" title="Native Bun HTTP and WebSocket adapter, zero runtime dependencies"><span class="dot" data-form="dot"></span><span class="label">ergenecore</span></a>
             <a class="node" href="https://github.com/AsenaJs/hono-adapter" title="Hono-based HTTP and WebSocket adapter"><span class="dot" data-form="dot"></span><span class="label">hono-adapter</span></a>
             <a class="node" href="https://github.com/AsenaJs/Asena-cli" title="Scaffold, generate, run and bundle"><span class="dot" data-form="dot"></span><span class="label">cli</span></a>
@@ -167,25 +173,99 @@
       </div>
     </section>
 
+    <!-- ───────────────────────── proof ───────────────────────── -->
+    <section id="proof" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">04 / proof</p>
+        <h2 class="title ghost" data-form="text">Measured</h2>
+        <p class="lede-s reveal" style="--i:1">Two benchmarks, both reproducible from the repos. The bars are drawn by the same particles as everything else on this page.</p>
+        <div class="charts">
+          <figure class="chart reveal" style="--i:2">
+            <figcaption><b>Asena against the field</b><span>Hello World, plaintext. Requests per second on one pinned CPU core.</span></figcaption>
+            <ol class="bars">
+              <li class="mine" style="--v:1"><span class="bar-name">Asena + Ergenecore</span><span class="bar-val">211,630</span><span class="bar-track"><i class="ghost" data-form="bar" data-tone="mine"></i></span></li>
+              <li style="--v:.9838"><span class="bar-name">Elysia 1.4</span><span class="bar-val">208,209</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.963"><span class="bar-name">Hono 4</span><span class="bar-val">203,790</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li class="mine" style="--v:.9035"><span class="bar-name">Asena + hono-adapter</span><span class="bar-val">191,199</span><span class="bar-track"><i class="ghost" data-form="bar" data-tone="mine"></i></span></li>
+              <li style="--v:.6804"><span class="bar-name">Fastify 5</span><span class="bar-val">143,992</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.6175"><span class="bar-name">Express 5</span><span class="bar-val">130,688</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.6055"><span class="bar-name">NestJS 11 + Fastify</span><span class="bar-val">128,142</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.5218"><span class="bar-name">NestJS 11 + Express</span><span class="bar-val">110,435</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+            </ol>
+            <p class="chart-note">Sweep of 2026-11-01, one pass: <code>wrk -t2 -c128</code> for 180&nbsp;s, every app returning byte-identical responses. Each framework is shown on Bun 1.4.4, the faster runtime for all of them here. Across the 11 shared scenarios Asena on Ergenecore is first in 3 and within 7% of the leader in the other 8, which go to Elysia and Hono. <a href="https://asena.sh/docs/benchmarks" rel="noopener">full tables&nbsp;&#8599;</a> <a href="https://github.com/AsenaJs/benchmark" rel="noopener">harness&nbsp;&#8599;</a></p>
+          </figure>
+          <figure class="chart reveal" style="--i:3">
+            <figcaption><b>zserver, one lesson at a time</b><span>HTTP/1.1 from scratch in Zig, standard library only. Requests per second after each change.</span></figcaption>
+            <ol class="bars">
+              <li style="--v:.0437"><span class="bar-name">blocking I/O</span><span class="bar-val">~6,600</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.1325"><span class="bar-name">+ epoll event loop</span><span class="bar-val">~20,000</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.2649"><span class="bar-name">+ keep-alive</span><span class="bar-val">~40,000</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li style="--v:.3046"><span class="bar-name">+ dispatch fix, fixed buffer</span><span class="bar-val">~46,000</span><span class="bar-track"><i class="ghost" data-form="bar"></i></span></li>
+              <li class="mine" style="--v:1"><span class="bar-name">+ zero-copy parsing</span><span class="bar-val">~151,000</span><span class="bar-track"><i class="ghost" data-form="bar" data-tone="mine"></i></span></li>
+            </ol>
+            <p class="chart-note">Measured with 12 threads and 400 connections for 30&nbsp;s. About 23&times; the first version, and the biggest jump came from not copying strings. Still on the list: arena allocation, write batching and WebSockets. <a href="https://github.com/LibirSoft/zserver" rel="noopener">source&nbsp;&#8599;</a></p>
+          </figure>
+        </div>
+      </div>
+    </section>
+
     <!-- ───────────────────────── now ───────────────────────── -->
     <section id="now" class="section" data-section>
       <div class="wrap">
-        <p class="kicker reveal">04 / right now</p>
+        <p class="kicker reveal">05 / right now</p>
         <h2 class="title ghost" data-form="text">Right now</h2>
         <p class="lede-s reveal" style="--i:1">Outside the framework, two things have most of my attention.</p>
         <div class="cards cards-2">
           <article class="card now-card reveal" style="--i:2" data-form="corners">
-            <p class="status"><span class="pulse"></span>building</p>
+            <p class="status"><span class="pulse" data-form="dot"></span>building</p>
             <h3>A runtime for agents</h3>
             <p>A minimal JavaScript runtime made for AI agents, built with Zig and QuickJS. The future runs on distributed agents, and someone has to manage them and give them environments that actually fit them. That is what we are building.</p>
             <ul class="tags"><li>Zig</li><li>QuickJS</li><li>agents</li><li>distributed</li></ul>
           </article>
           <article class="card now-card reveal" style="--i:3" data-form="corners">
-            <p class="status"><span class="pulse"></span>training</p>
+            <p class="status"><span class="pulse" data-form="dot"></span>training</p>
             <h3>Models &amp; workflows</h3>
-            <p>I fine-tune my own models and keep thinking up and building new workflows around them. I also share AI skills in the open, like the ones that teach coding assistants to write <a href="https://github.com/AsenaJs/skills" rel="noopener">AsenaJS&nbsp;&#8599;</a></p>
+            <p>I fine-tune my own models and keep thinking up and building new workflows around them. The newest one is public: <a href="#granny">granny</a>, one scroll down. I also share AI skills in the open, like the ones that teach coding assistants to write <a href="https://github.com/AsenaJs/skills" rel="noopener">AsenaJS&nbsp;&#8599;</a></p>
             <ul class="tags"><li>fine-tuning</li><li>workflows</li><li>skills</li></ul>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── granny ───────────────────────── -->
+    <section id="granny" class="section" data-section>
+      <div class="wrap">
+        <p class="kicker reveal">06 / I love my granny</p>
+        <h2 class="title ghost" data-form="text">Granny</h2>
+        <div class="asena top">
+          <div class="asena-copy">
+            <p class="lede-s reveal" style="--i:1">Granny takes a plan and turns it into a PR-ready branch. An implementer agent builds it stage by stage, reviewers check every stage in parallel, and a judge decides which findings are worth fixing. The loop repeats until the review is clean. Nothing is pushed: you get a branch, a PR body and a short report, and you decide what happens next.</p>
+            <ul class="stats reveal" style="--i:2">
+              <li><b>4</b><span>agent hosts</span></li>
+              <li><b>4</b><span>rounds at most</span></li>
+              <li><b>70</b><span>fix threshold</span></li>
+              <li><b>0</b><span>pushes</span></li>
+            </ul>
+            <pre class="code reveal" style="--i:3" aria-label="Using granny"><code><span class="c">$</span> npx skills add <span class="s">LibirSoft/grannyFlow</span>
+
+<span class="c">&gt;</span> <span class="d">granny setup</span>
+<span class="c">&gt;</span> plan OAuth login <span class="d">with granny</span> on feat/oauth
+<span class="c">&gt;</span> implement plans/auth/plan.md <span class="d">with granny</span>
+<span class="c">&gt;</span> <span class="d">granny judge</span></code></pre>
+            <p class="fine reveal" style="--i:4">The judge rates impact, likelihood and fix cost, and code turns that into a priority. Critical and major findings are always fixed, the rest only above the threshold, and whatever is left comes back to you with the reason. On Claude Code, opencode and omp the loop runs as code, so the round cap holds on every run. On Cursor the agent follows the same steps by hand.</p>
+            <p class="links reveal" style="--i:5"><a href="https://github.com/LibirSoft/grannyFlow" rel="noopener">source &#8599;</a><a href="https://github.com/LibirSoft/grannyFlow#how-it-works" rel="noopener">how it works &#8599;</a></p>
+          </div>
+          <div class="loop reveal" style="--i:2" id="loop" role="img" aria-label="The granny loop: a plan goes to the implementer, then checks, reviewers and the judge. Findings worth fixing go back to the implementer; a clean review leaves as a PR-ready branch.">
+            <svg class="ghost" aria-hidden="true"></svg>
+            <span class="node" data-at="plan" title="A plan you wrote, or one the planner agent wrote and you approved"><span class="dot" data-form="dot"></span><span class="label">plan</span></span>
+            <span class="node" data-at="implementer" title="Builds one stage, commits, and later fixes the findings sent back"><span class="dot" data-form="dot"></span><span class="label">implementer</span></span>
+            <span class="node" data-at="checks" title="Your test, typecheck, lint or build commands. A red one goes straight back"><span class="dot" data-form="dot"></span><span class="label">checks</span></span>
+            <span class="node" data-at="reviewers" title="All of them review every stage at the same time"><span class="dot" data-form="dot"></span><span class="label">reviewers</span></span>
+            <span class="node" data-at="judge" title="Rates impact, likelihood and fix cost. P0 and P1 skip the judge and go straight back"><span class="dot" data-form="dot"></span><span class="label">judge</span></span>
+            <span class="node" data-at="branch" title="A worktree branch, a PR body and a report. Not pushed"><span class="dot" data-form="dot"></span><span class="label">PR-ready branch</span></span>
+            <span class="node tag" data-at="fix"><span class="label">fix</span></span>
+            <span class="node tag" data-at="clean"><span class="label">clean</span></span>
+          </div>
         </div>
       </div>
     </section>
@@ -193,32 +273,32 @@
     <!-- ───────────────────────── lab ───────────────────────── -->
     <section id="lab" class="section" data-section>
       <div class="wrap">
-        <p class="kicker reveal">05 / projects</p>
+        <p class="kicker reveal">07 / projects</p>
         <h2 class="title ghost" data-form="text">The lab</h2>
         <p class="lede-s reveal" style="--i:1">Everything here runs on Asena, or helps Asena run.</p>
         <div class="cards cards-3">
           <a class="card proj reveal" style="--i:2" data-form="corners" href="https://github.com/LibirSoft/asena-peer-pong" rel="noopener">
-            <span class="lang">typescript</span><h3>asena-peer-pong</h3>
-            <p>Online multiplayer Pong on AsenaJS. Physics run on the server at 60&nbsp;Hz, players find each other over UDP on the same network.</p>
+            <span class="lang">typescript</span><h3>asena-peer-pong<span class="arr" aria-hidden="true">&#8599;</span></h3>
+            <p>Online multiplayer Pong on AsenaJS. Physics run on the server at 60&nbsp;Hz and clients only send a paddle direction, so nobody can cheat the ball. Instances on the same network find each other over UDP beacons.</p>
           </a>
           <a class="card proj reveal" style="--i:3" data-form="corners" href="https://github.com/LibirSoft/AsenaExample" rel="noopener">
-            <span class="lang">typescript</span><h3>AsenaExample</h3>
+            <span class="lang">typescript</span><h3>AsenaExample<span class="arr" aria-hidden="true">&#8599;</span></h3>
             <p>A production-shaped Todo and chat app: JWT auth, Zod validation, OpenAPI docs, Drizzle with declarative transactions, and WebSocket rooms.</p>
           </a>
           <a class="card proj reveal" style="--i:4" data-form="corners" href="https://github.com/AsenaJs/benchmark" rel="noopener">
-            <span class="lang">typescript</span><h3>benchmark</h3>
+            <span class="lang">typescript</span><h3>benchmark<span class="arr" aria-hidden="true">&#8599;</span></h3>
             <p>Eight framework setups, twelve app and runtime targets, one frozen contract with byte-identical responses, and wrk on an isolated CPU core.</p>
           </a>
           <a class="card proj reveal" style="--i:5" data-form="corners" href="https://github.com/AsenaJs/skills" rel="noopener">
-            <span class="lang">agent skills</span><h3>skills</h3>
+            <span class="lang">agent skills</span><h3>skills<span class="arr" aria-hidden="true">&#8599;</span></h3>
             <p>Skills that teach AI coding assistants like Claude Code, Cursor, Copilot and Windsurf to write correct AsenaJS code.</p>
           </a>
           <a class="card proj reveal" style="--i:6" data-form="corners" href="https://github.com/AsenaJs/asena-test-suite" rel="noopener">
-            <span class="lang">typescript</span><h3>asena-test-suite</h3>
+            <span class="lang">typescript</span><h3>asena-test-suite<span class="arr" aria-hidden="true">&#8599;</span></h3>
             <p>One conformance suite for every HTTP adapter: routing, errors, middleware, validation, streaming, WebSocket and lifecycle.</p>
           </a>
           <a class="card proj reveal" style="--i:7" data-form="corners" href="https://asena.sh" rel="noopener">
-            <span class="lang">docs</span><h3>asena.sh</h3>
+            <span class="lang">docs</span><h3>asena.sh<span class="arr" aria-hidden="true">&#8599;</span></h3>
             <p>The documentation site: guides, adapters, packages, testing, migration notes, benchmarks and a generated llms.txt.</p>
           </a>
         </div>
@@ -228,20 +308,25 @@
     <!-- ───────────────────────── contact ───────────────────────── -->
     <section id="contact" class="section contact" data-section>
       <div class="wrap center">
-        <button id="singularity" class="singularity" type="button" data-form="sphere" aria-label="Collapse the universe and start over"><span class="orb ghost"></span></button>
-        <p class="kicker reveal">06 / end of the universe</p>
+        <button id="singularity" class="singularity" type="button" data-form="sphere" aria-label="Collapse the universe and start over"><span class="orb ghost"></span><span class="say-ghost ghost" aria-hidden="true"></span></button>
+        <p class="kicker reveal">08 / end of the universe</p>
         <h2 class="title-s reveal" style="--i:1">Say hi.</h2>
         <p class="lede-s reveal" style="--i:2">GitHub is the best way to reach me. Issues, pull requests, stars and strange ideas are all welcome.</p>
+        <p class="say reveal" style="--i:3">
+          <label for="say-in">or say it with stars</label>
+          <span class="say-box"><input id="say-in" type="text" maxlength="16" placeholder="type a word" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" title="It stays in your browser. Nothing is sent."><span class="say-mirror ph" aria-hidden="true">type a word</span></span>
+        </p>
         <p class="links big reveal" style="--i:3">
           <a href="https://github.com/LibirSoft" rel="noopener">github.com/LibirSoft &#8599;</a>
           <a href="https://github.com/AsenaJs" rel="noopener">github.com/AsenaJs &#8599;</a>
           <a href="https://asena.sh" rel="noopener">asena.sh &#8599;</a>
         </p>
-        <p class="hint reveal" style="--i:4">psst. the singularity is clickable.</p>
+        <p class="hint reveal" style="--i:4">bio, verbatim: &ldquo;I am just too broken to be used.&rdquo;</p>
+        <p class="hint hint-2 reveal" style="--i:5">psst. the singularity is clickable.</p>
       </div>
       <footer class="foot">
         <span>&copy; 2026 LibirSoft</span>
-        <span>Written from scratch. No libraries, just <span id="pcount">a few thousand</span> particles and some springs.</span>
+        <span>Written from scratch. No libraries, and the browser draws no letters here: every pixel of every word is one of <span id="pcount">about a million</span> dots.</span>
         <span class="egg" title="for the Emperor">The Codex Astartes does not support this action.</span>
       </footer>
     </section>

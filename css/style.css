@@ -113,6 +113,18 @@ html.intro.imploding .halo { opacity: 0; transition-duration: 0.3s; }
   border: 2px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 0 24px rgba(160, 230, 255, 0.6), inset 0 0 18px rgba(255, 255, 255, 0.4);
 }
+/* press and hold: the hole itself. Black enough to swallow the text under it, with a thin hot rim */
+.hole {
+  position: absolute; left: 0; top: 0; width: 88px; height: 88px; margin: -44px 0 0 -44px; border-radius: 50%;
+  background: radial-gradient(circle, #000 0 84%, rgba(0, 0, 0, 0.5) 93%, transparent 100%);
+  box-shadow: 0 0 0 1px rgba(255, 214, 170, 0.5), 0 0 28px 3px rgba(255, 160, 80, 0.32), inset 0 0 12px rgba(255, 190, 130, 0.22);
+  opacity: 0; transition: opacity 0.3s ease; will-change: transform;
+}
+.fx.holing .hole { opacity: 1; }
+.fx.nova .flash { animation: flash-s 0.8s ease-out forwards; }
+.fx.nova .shock { animation: shock 1.1s cubic-bezier(0.1, 0.6, 0.2, 1) forwards; }
+@keyframes flash-s { 0% { opacity: 0; transform: scale(0.08); } 10% { opacity: 0.45; transform: scale(0.4); } 100% { opacity: 0; transform: scale(0.55); } }
+html.holding { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .fx.bang .flash { animation: flash 1.1s ease-out forwards; }
 .fx.bang .shock { animation: shock 1.3s cubic-bezier(0.1, 0.6, 0.2, 1) forwards; }
 @keyframes flash { 0% { opacity: 0; transform: scale(0.2); } 8% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.3); } }
@@ -301,8 +313,8 @@ html:not(.js) .card::before, html.reduced .card::before { opacity: 1; }
 .card-idx, .lang { font-family: var(--mono); font-size: 12px; color: var(--dim); }
 .lang { color: var(--accent); }
 .proj:hover, .proj:focus-visible { border-color: var(--line-strong); background: rgba(10, 14, 18, 0.85); }
-.proj h3::after { content: " \2197"; font-family: var(--mono); font-size: 0.7em; color: var(--dim); transition: color 0.2s; }
-.proj:hover h3::after { color: var(--accent); }
+.proj h3 .arr { margin-left: 0.4em; font-family: var(--mono); font-size: 0.7em; color: var(--dim); transition: color 0.2s; }
+.proj:hover h3 .arr { color: var(--accent); }
 .tags { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 18px 0 0; font-family: var(--mono); font-size: 12px; }
 .tags li { padding: 3px 9px; border: 1px solid var(--line); color: var(--muted); border-radius: 99px; }
 
@@ -330,6 +342,8 @@ html:not(.js) .card::before, html.reduced .card::before { opacity: 1; }
 .code .t { color: #e8eef4; font-weight: 600; }
 .code .s { color: var(--warm); }
 .code .f { color: #8fd8ff; }
+.code .c { color: var(--dim); -webkit-user-select: none; user-select: none; }
+.fine { margin-top: 22px; font-size: 15px; color: var(--muted); max-width: 62ch; }
 .links { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: 22px; font-family: var(--mono); font-size: 14px; }
 .links a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; transition: color 0.2s; }
 .links a:hover { color: var(--accent); }
@@ -350,18 +364,59 @@ html:not(.js) .card::before, html.reduced .card::before { opacity: 1; }
 }
 .node.core .dot { left: -9px; top: -9px; width: 18px; height: 18px; background: var(--accent); box-shadow: 0 0 22px rgba(0, 189, 179, 0.8); }
 html:not(.js) .node .dot, html.reduced .node .dot { opacity: 1; }
+/* the wolf at the centre of the pack: stars when the particles run, the logo itself when they don't */
+.node.core .wolf { position: absolute; width: var(--wolf, 200px); height: var(--wolf, 200px); max-width: none; left: calc(var(--wolf, 200px) / -2); top: calc(var(--wolf, 200px) / -2); }
+html:not(.js) .wolf, .constellation:not(.laid-out) .wolf { display: none; }
 .node .label { position: absolute; top: -9px; white-space: nowrap; padding: 0 2px; transition: color 0.2s; line-height: 18px; }
 .node.r .label { left: 12px; }
 .node.l .label { right: 12px; }
 .node.t .label { left: 50%; transform: translateX(-50%); top: auto; bottom: 10px; }
 .node.b .label { left: 50%; transform: translateX(-50%); top: 10px; }
-.node.core .label { left: 50%; transform: translateX(-50%); top: 16px; color: var(--fg); font-weight: 600; font-size: 13px; }
+.node.core .label { left: 50%; transform: translateX(-50%); top: calc(var(--wolf, 200px) / 2 + 6px); color: var(--fg); font-weight: 600; font-size: 13px; }
 .node:hover .label, .node:focus-visible .label { color: var(--accent); }
 /* before JS lays the ring out, fall back to a plain list */
 html:not(.js) .constellation, .constellation:not(.laid-out) { aspect-ratio: auto; display: flex; flex-wrap: wrap; gap: 8px 16px; }
 html:not(.js) .constellation .node, .constellation:not(.laid-out) .node { position: static; width: auto; height: auto; }
 html:not(.js) .constellation .node .label, .constellation:not(.laid-out) .node .label { position: static; }
 .constellation:not(.laid-out) .dot { display: none; }
+
+/* ─────────────────────────────── proof ─────────────────────────────── */
+.charts { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 72px); align-items: start; margin-top: clamp(28px, 4vw, 48px); }
+.chart { margin: 0; }
+.chart figcaption b { display: block; color: var(--fg); font-size: clamp(19px, 1.9vw, 23px); font-weight: 600; letter-spacing: -0.01em; }
+.chart figcaption span { display: block; margin-top: 4px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.bars { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 11px; }
+.bars li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 12px; align-items: baseline;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.4; color: var(--muted);
+}
+.bars .mine { color: var(--fg); }
+.bar-val { font-variant-numeric: tabular-nums; }
+/* the rail is always there; the bar on it is drawn by particles (or by CSS without them) */
+.bar-track { grid-column: 1 / -1; height: 9px; border-bottom: 1px solid var(--line); box-sizing: content-box; }
+.bar-track i { display: block; height: 100%; width: calc(var(--v, 0) * 100%); min-width: 4px; border-radius: 1px; background: rgba(255, 255, 255, 0.42); }
+.mine .bar-track i { background: var(--accent); box-shadow: 0 0 14px rgba(0, 189, 179, 0.5); }
+.chart-note { margin-top: 20px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.chart-note a { color: var(--fg); white-space: nowrap; text-decoration-color: var(--accent); text-underline-offset: 3px; margin-left: 4px; }
+
+/* ─────────────────────────────── granny ─────────────────────────────── */
+.asena.top { align-items: start; }
+.loop { position: relative; width: 100%; max-width: 540px; aspect-ratio: 1 / 0.8; margin: 0 auto; }
+.loop svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.loop svg path, .loop svg line { fill: none; stroke: rgba(255, 255, 255, 0.22); stroke-width: 1; stroke-dasharray: 2 4; }
+.loop .node { cursor: default; color: var(--text); }
+.loop .node .dot { left: -8px; top: -8px; width: 16px; height: 16px; }
+.loop .node.r .label { left: 26px; }
+.loop .node.l .label { right: 26px; }
+.loop .node.t .label { bottom: 22px; }
+.loop .node.tag .label { color: var(--accent); font-size: 11px; letter-spacing: 0.04em; }
+.loop .node.tag.b .label { top: 9px; }
+.loop .node.tag.l .label { right: 12px; }
+html:not(.js) .loop, .loop:not(.laid-out) { aspect-ratio: auto; display: flex; flex-wrap: wrap; gap: 8px 6px; }
+html:not(.js) .loop .node, .loop:not(.laid-out) .node { position: static; width: auto; height: auto; }
+html:not(.js) .loop .node .label, .loop:not(.laid-out) .node .label { position: static; }
+html:not(.js) .loop .node:not(.tag):not(:nth-last-child(3))::after, .loop:not(.laid-out) .node:not(.tag):not(:nth-last-child(3))::after { content: " \2192"; color: var(--dim); }
+html:not(.js) .loop .tag, html:not(.js) .loop svg, .loop:not(.laid-out) .tag, .loop:not(.laid-out) svg, .loop:not(.laid-out) .dot { display: none; }
 
 /* ─────────────────────────────── contact ─────────────────────────────── */
 .contact { display: flex; flex-direction: column; justify-content: center; padding-bottom: 0; }
@@ -384,7 +439,29 @@ html:not(.js) .constellation .node .label, .constellation:not(.laid-out) .node .
   box-shadow: 0 0 60px rgba(160, 220, 255, 0.18);
 }
 .contact .lede-s { margin: 0 auto; }
+.say { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.say-box { position: relative; display: inline-block; }
+.say-mirror { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; pointer-events: none; font: 500 16px/1.3 var(--mono); letter-spacing: 0.06em; color: var(--fg); white-space: pre; }
+.say-mirror.ph { color: var(--dim); }
+html.ink .say-mirror { display: flex; opacity: 0; }   /* never seen: it is where the box's ink is sampled from */
+.say input {
+  width: min(280px, 78vw); padding: 8px 4px; text-align: center;
+  font: 500 16px/1.3 var(--mono); letter-spacing: 0.06em; color: var(--fg);
+  background: transparent; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; outline: 0;
+  transition: border-color 0.2s;
+}
+.say input::placeholder { color: var(--dim); }
+.say input:focus { border-bottom-color: var(--accent); }
+.say-ghost {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  white-space: nowrap; font: 700 100px/1 var(--sans); text-transform: uppercase; color: var(--fg);
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.22); pointer-events: none;
+}
+.singularity.saying .orb { opacity: 0 !important; }
+.hint-hold { margin-top: 26px; }
+html:not(.js) .hint-hold, html.reduced .hint-hold, html:not(.js) .say, html.no-canvas .say { display: none; }
 .links.big { justify-content: center; font-size: clamp(14px, 1.6vw, 16px); margin-top: 30px; }
+.hint-2 { margin-top: 10px !important; }
 .hint { margin-top: 34px; font-family: var(--mono); font-size: 12px; color: var(--dim); }
 .foot {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px;
@@ -399,7 +476,7 @@ html:not(.js) .constellation .node .label, .constellation:not(.laid-out) .node .
 
 /* ─────────────────────────────── responsive ─────────────────────────────── */
 @media (max-width: 900px) {
-  .story, .asena { grid-template-columns: minmax(0, 1fr); }
+  .story, .asena, .charts { grid-template-columns: minmax(0, 1fr); }
   .cards-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stats { grid-template-columns: repeat(2, auto); }
   .constellation { max-width: 460px; }
@@ -411,7 +488,10 @@ html:not(.js) .constellation .node .label, .constellation:not(.laid-out) .node .
   .cards-4, .cards-3, .cards-2 { grid-template-columns: minmax(0, 1fr); }
   .topbar { font-size: 12px; }
   .topbar nav { gap: 12px; }
+  .topbar nav .nv-wide { display: none; }
   .node { font-size: 11px; }
+  .bars li { font-size: 12px; }
+  .bar-track { height: 6px; }
   .code { font-size: 12px; padding: 16px; }
   .foot { flex-direction: column; }
 }
@@ -419,7 +499,7 @@ html:not(.js) .constellation .node .label, .constellation:not(.laid-out) .node .
   .topbar nav { gap: 10px; }
 }
 @media (max-width: 350px) {
-  .topbar nav a:nth-child(1) { display: none; }
+  .topbar nav .nv-mid { display: none; }
 }
 
 /* ─────────────────────────────── motion ─────────────────────────────── */
@@ -432,6 +512,31 @@ html:not(.js) .constellation .node .label, .constellation:not(.laid-out) .node .
 @media (prefers-reduced-motion: no-preference) {
   html:not(.intro) { scroll-behavior: smooth; }
 }
+
+/* ─────────────────────────────── ink ─────────────────────────────── */
+/* With particles running, nothing here is painted by the browser: every word, rule and
+   frame is dots on the canvas, one per pixel, so at rest it reads as ordinary text. The
+   DOM keeps its layout and stays clickable, selectable and readable by assistive tech;
+   it is just never shown. */
+html.ink .section > *,
+html.ink.js:not(.reduced) .section:focus-within > * { opacity: 0 !important; }
+html.ink .topbar,
+html.ink .topbar.scrolled { background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.ink .topbar > * { opacity: 0; }
+html.ink .topbar nav a { transition: none; }   /* ink is sampled the moment the current link changes */
+html.ink .scroll-cue span, html.ink .pulse::after { animation: none; }
+/* the dark fill of cards and code blocks, kept under the canvas (see layoutPanes) */
+.panes { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 0; pointer-events: none; }
+.panes > div { position: absolute; left: 0; top: 0; opacity: 0; }
+.panes > div > div { position: absolute; border-radius: 2px; }
+html:not(.ink) .panes { display: none; }
+.focus-ring {
+  position: fixed; left: 0; top: 0; z-index: 12; pointer-events: none; border-radius: 3px;
+  border: 1px dotted var(--accent); box-shadow: 0 0 12px rgba(0, 189, 179, 0.35);
+  opacity: 0; transition: opacity 0.15s ease;
+}
+.focus-ring.on { opacity: 1; }
+html.measuring .topbar { transform: none !important; transition: none !important; }
 
 /* sampling pass: measure final positions, not mid-reveal ones */
 html.measuring .reveal { transform: none !important; transition: none !important; }

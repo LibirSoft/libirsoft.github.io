@@ -1,4 +1,6 @@
-// The particle universe. Plain typed arrays, no libraries.
+// The particle universe, simulated in JavaScript. Plain typed arrays, no libraries.
+// With WebGL2 the page runs the same model on the GPU instead (gpu.js); this version is
+// the reference, and what drives the plain 2D canvas when WebGL2 is missing.
 //
 // Every particle is in one of three modes:
 //   INTRO   pinned to the rotating singularity sphere (screen space)
@@ -12,6 +14,8 @@
 // Points come in two kinds: headings/shapes (kind 0) stay as particles at rest; body
 // text (kind 1) is only visible while it is being built or torn down, because at rest
 // the crisp DOM text takes over (formation.bodyVis, set by the page, crossfades them).
+// A formation may also carry per-point `depth` (brightness) and `tint` (0..1 towards
+// teal), and a `dynamic(F, t, dt)` hook that moves its points every frame.
 
 import { createRenderer, STRIDE } from './renderer.js';
 import { fib } from './sampler.js';
@@ -27,22 +31,24 @@ const PALETTE = [
   [1.0, 0.84, 0.66, 0.05],  // warm
 ];
 const HOT = [1.0, 0.72, 0.42];
+const TEAL = [0.22, 1.0, 0.9];
 const MAX_SPEED = 4200;
 const RAMP = 0.7;          // seconds for a spring to reach full stiffness
 const STAG = 0.5;          // how spread out departures are along a scroll transition
 export const FORM_FRAC = 0.66; // share of particles that build formations
-const IMPLODE = 0.34;      // seconds of collapse before the bang
+export const IMPLODE = 0.34;      // seconds of collapse before the bang
 
-function pickColor() {
+export function pickColor() {
   let r = Math.random();
   for (const c of PALETTE) { if ((r -= c[3]) <= 0) return c; }
   return PALETTE[0];
 }
 
 export class Cosmos {
-  constructor(canvas, count) {
+  constructor(canvas, count, renderer) {
     this.canvas = canvas;
-    this.renderer = createRenderer(canvas);
+    this.renderer = renderer !== undefined ? renderer : createRenderer(canvas);
+    this.sim = 'cpu';
     this.kind = this.renderer ? this.renderer.kind : 'none';
     this.N = count;
     this.active = count;
@@ -54,6 +60,7 @@ export class Cosmos {
     this.cr = F(); this.cg = F(); this.cb = F();
     this.ux = F(); this.uy = F(); this.uz = F();
     this.stag = F(); this.sway = F(); this.qv = F();
+    this.sunk = F();   // how deep in the gravity well a particle is (0..1)
     this.mode = new Uint8Array(count);
     this.rank = new Int32Array(count).fill(-1);
     this.out = new Float32Array(count * STRIDE);
@@ -76,11 +83,15 @@ export class Cosmos {
     this.lastScrollY = 0;
     this.w = 1; this.h = 1; this.dpr = 1;
     this.mouse = { x: -1e5, y: -1e5, on: false };
+    // press and hold: a gravity well in screen space that charges while it is held
+    this.well = { x: 0, y: 0, on: false, charge: 0 };
     this.repel = 90;
     this.ambDrag = 0.9;
     this.phase = 'intro';
     this.intro = { cx: 0, cy: 0, R: 100, spin: 0, implodeAt: -1, scale: 1 };
     this.sizeScale = 1;
+    this.fadeA = -1e9; this.fadeB = -1e9;   // formations fade out between these screen ys (under the top bar)
+    this.panes = null; this.paneCount = 0;  // dark panels (x0, y0, x1, y1, strength): free stars dim inside them
     this.maxStretch = 26;
     this.frame = 0;
     this.drawn = 0;
@@ -222,6 +233,34 @@ export class Cosmos {
     }
   }
 
+  wellRadius() { return (150 + 330 * this.well.charge) * (this.w < 640 ? 0.72 : 1); }
+
+  /** Let go of the hole. Whatever it gathered is thrown back out; returns the charge it had (0 for a mere click). */
+  releaseWell() {
+    const well = this.well;
+    if (!well.on) return 0;
+    const c = well.charge, R = this.wellRadius() * 1.25;
+    well.on = false; well.charge = 0;
+    if (c < 0.22) return 0;
+    const t = this.time, sy = this.scrollY;
+    for (let i = 0; i < this.active; i++) {
+      const m = this.mode[i];
+      if (m === INTRO) continue;
+      const dx = this.x[i] - well.x, dy = (m === BOUND ? this.y[i] - sy : this.y[i]) - well.y;
+      const d = Math.hypot(dx, dy);
+      if (d > R) continue;
+      const f = 1 - d / R;
+      const a = d > 0.5 ? Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.5 : Math.random() * TAU;
+      const sp = (500 + 1900 * c) * f * (0.5 + Math.random());
+      this.vx[i] = this.vx[i] * 0.3 + Math.cos(a) * sp;
+      this.vy[i] = this.vy[i] * 0.3 + Math.sin(a) * sp;
+      this.heat[i] = Math.max(this.heat[i], 0.45 + 0.55 * f);
+      if (m === BOUND) this.attach[i] = t + 0.15 + Math.random() * 0.65 * c;
+    }
+    this.ambDrag = 1.6;
+    return c;
+  }
+
   /* ───────────────────────────── formations ───────────────────────────── */
 
   toBound(i) { if (this.mode[i] !== BOUND) { this.y[i] += this.scrollY; this.mode[i] = BOUND; } }
@@ -323,12 +362,18 @@ export class Cosmos {
     const segP = this.segP;
     let near = 0, nBound = 0;
 
-    const mOn = this.mouse.on;
+    const well = this.well;
+    if (well.on) well.charge = Math.min(1, well.charge + dt / 1.5);
+    const wOn = well.on && well.charge > 0.06;   // a plain click never gets this far
+    const wx = well.x, wy = well.y, wc = well.charge;
+    const WR = this.wellRadius(), WR2 = WR * WR, r0 = 22 + 26 * wc;
+
+    const mOn = this.mouse.on && !wOn;
     const mx = this.mouse.x, my = this.mouse.y;
     const R = this.repel, R2 = R * R;
     const RA = R * 1.7, RA2 = RA * RA;
     const W = this.w, H = this.h, MW = W + 60, MH = H + 60;
-    const heatDecay = Math.exp(-dt * 1.15);
+    const heatDecay = Math.exp(-dt * 1.15), sunkDecay = Math.exp(-dt * 5);
     const lookRate = Math.min(1, dt * 2.2);
 
     const { x, y, vx, vy, mode } = this;
@@ -410,6 +455,23 @@ export class Cosmos {
         this.look[i] -= this.look[i] * lookRate * 0.6;
       }
 
+      if (wOn) {
+        const dx = wx - px, dy = wy - (m === BOUND ? py - sy : py);
+        const d2 = dx * dx + dy * dy;
+        if (d2 < WR2) {
+          // the spring lets go as the hole takes over; matter falls to a ring and is dragged round it
+          const d = Math.sqrt(d2) + 0.01;
+          let w = 1 - d / WR; w = wc * w * (2 - w);
+          const nx = dx / d, ny = dy / d;
+          let e = (d - r0) / 70; e = e > 1 ? 1 : e < -1 ? -1 : e;
+          const keep = (1 - w) * (1 - w);
+          const rad = 5200 * w * e, tan = 900 * w, drag = 2.4 * w;
+          ax = ax * keep + nx * rad - ny * tan - vxi * drag;
+          ay = ay * keep + ny * rad + nx * tan - vyi * drag;
+          this.sunk[i] = w;
+        }
+      }
+
       let nvx = vxi + ax * dt, nvy = vyi + ay * dt;
       const s2 = nvx * nvx + nvy * nvy;
       if (s2 > MAX_SPEED * MAX_SPEED) { const k = MAX_SPEED / Math.sqrt(s2); nvx *= k; nvy *= k; }
@@ -430,6 +492,7 @@ export class Cosmos {
       }
       x[i] = px; y[i] = py; vx[i] = nvx; vy[i] = nvy;
       this.heat[i] *= heatDecay;
+      this.sunk[i] *= sunkDecay;
     }
 
     this.formed = nBound ? near / nBound : 0;
@@ -444,6 +507,7 @@ export class Cosmos {
     const ss = this.sizeScale;
     const introP = this.intro.implodeAt >= 0 ? Math.min(1, (t - this.intro.implodeAt) / IMPLODE) : 0;
     const FA = this.formations[this.segA], FB = this.formations[this.segB] || FA;
+    const phaseLive = this.phase === 'live';
     let n = 0;
     for (let i = 0, N = this.active; i < N; i++) {
       const m = this.mode[i];
@@ -466,7 +530,7 @@ export class Cosmos {
         const tw = 0.72 + 0.28 * Math.sin(t * (0.6 + this.seed[i] * 2.4) + this.tw[i]);
         const ambS = (0.5 + 1.25 * z) * ss;
         const ambA = (0.06 + 0.36 * z * z) * tw;
-        let fs = 1.9 * ss, fa = 0.9;
+        let fs = 1.9 * ss, fa = 0.9, tint = 0;
         if (m === BOUND && FA) {
           const j = this.rank[i], q = this.qv[i];
           const kA = FA.kind ? FA.kind[j] : 0, kB = FB.kind ? FB.kind[j] : 0;
@@ -477,8 +541,10 @@ export class Cosmos {
           const sA = kA ? FA.bsize : FA.psize, sB = kB ? FB.bsize : FB.psize;
           fs = (sA + (sB - sA) * q) * ss;
           fa = aA + (aB - aA) * q;
+          const tA = FA.tint ? FA.tint[j] : 0, tB = FB.tint ? FB.tint[j] : 0;
+          tint = tA + (tB - tA) * q;
           if (q > 0 && q < 1) fa = Math.max(fa, 0.85 * Math.sin(q * Math.PI));
-          if (fa < 0.015 && L > 0.95) continue;
+          if (fa < 0.015 && L > 0.95 && this.heat[i] < 0.02 && this.sunk[i] < 0.02) continue;
           if (q > 0 && q < 1) {
             // in transit: thinner and dimmer, so the stream never smothers the text it crosses
             const f = Math.sin(q * Math.PI);
@@ -488,11 +554,38 @@ export class Cosmos {
         }
         size = ambS + (fs - ambS) * L;
         alpha = ambA + (fa - ambA) * L;
+        if (m !== BOUND && this.paneCount) {
+          const P = this.panes, dy = py + sy;
+          let dim = 0;
+          for (let k = 0, e = this.paneCount * 5; k < e; k += 5) {
+            if (px > P[k] && px < P[k + 2] && dy > P[k + 1] && dy < P[k + 3] && P[k + 4] > dim) dim = P[k + 4];
+          }
+          if (dim) alpha *= 1 - dim * (1 - Math.min(1, this.sunk[i] * 2 + this.heat[i]));
+        }
+        if (m === BOUND && py < this.fadeB && phaseLive) {
+          const f = (py - this.fadeA) / (this.fadeB - this.fadeA);
+          alpha *= f <= 0 ? 0 : f * f * (3 - 2 * f);
+        }
         const wl = L * 0.55;
         r += (1 - r) * wl; g += (1 - g) * wl; b += (1 - b) * wl;
+        if (tint > 0) {
+          const tl = tint * L;
+          r += (TEAL[0] - r) * tl; g += (TEAL[1] - g) * tl; b += (TEAL[2] - b) * tl;
+        }
+      }
+      const sk = this.sunk[i];
+      if (sk > 0.01) {
+        // matter in the well glows like an accretion disc, but each grain is dimmed: thousands
+        // of them share a few pixels there, and additive light would wash out to plain white
+        if (m === BOUND && alpha < sk * 0.5) alpha = sk * 0.5;
+        r += (HOT[0] - r) * sk; g += (HOT[1] * 0.86 - g) * sk; b += (HOT[2] * 0.7 - b) * sk;
+        alpha *= 1 - 0.74 * sk;
+        size *= 1 - 0.2 * sk;
       }
       const h = this.heat[i];
       if (h > 0.01) {
+        // hot matter always shows, even body text that is normally left to the DOM
+        if (m === BOUND && alpha < h * 0.6) alpha = h * 0.6;
         r += (HOT[0] - r) * h; g += (HOT[1] - g) * h; b += (HOT[2] - b) * h;
         alpha *= 1 + h * 1.8;
         size *= 1 + h * 0.5;
@@ -509,7 +602,7 @@ export class Cosmos {
   }
 }
 
-function shuffle(a) {
+export function shuffle(a) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = (Math.random() * (i + 1)) | 0;
     const t = a[i]; a[i] = a[j]; a[j] = t;
