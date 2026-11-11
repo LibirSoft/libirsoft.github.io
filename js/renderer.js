@@ -69,8 +69,8 @@ uniform float uVis;
 uniform float uTime;
 uniform float uDpr;
 uniform vec2 uFade;     // content fades out under the top bar between these two screen ys
-uniform vec3 uMouse;    // x, y, radius (0 = off)
-uniform vec4 uWell;     // x, y, charge, seconds held
+uniform vec4 uMouse;    // x, y, radius, strength 0..1: a soft lens that trails the pointer
+uniform vec4 uWell;     // x, y, charge, how far the ring has turned
 uniform vec2 uWellR;    // reach, ring radius
 uniform vec2 uBlast;    // seconds since release (-1 = none), charge at release
 uniform vec3 uPulse;    // x, y, seconds since the click (-1 = none)
@@ -100,10 +100,17 @@ void main() {
     p += vec2(cos(a0), sin(a0)) * k * (20.0 + 120.0 * r2);
   }
 
-  if (uMouse.z > 0.0) {
+  if (uMouse.w > 0.002) {
+    // a gentle bulge under the pointer: magnified at the centre, easing back to nothing at
+    // the rim with no kink anywhere, so the text swells instead of tearing open
     vec2 dm = p - uMouse.xy;
-    float d = length(dm);
-    if (d < uMouse.z && d > 0.01) { float f = 1.0 - d / uMouse.z; p += dm / d * f * f * 38.0; }
+    float u2 = dot(dm, dm) / (uMouse.z * uMouse.z);
+    if (u2 < 1.0) {
+      float g = 1.0 - u2;
+      float grow = 1.0 + 0.2 * uMouse.w * g * g;
+      p = uMouse.xy + dm * grow;
+      size *= grow;   // the dots grow with the gaps between them, so the letters stay solid
+    }
   }
   if (uPulse.z >= 0.0) {
     vec2 dp = p - uPulse.xy;
@@ -119,11 +126,15 @@ void main() {
     if (d < WR * 1.25) {
       float e = clamp(1.0 - d / WR, 0.0, 1.0);
       float w = uWell.z * e * (2.0 - e);
-      // held: fall to a ring round the hole and get dragged along it, faster the deeper you are
+      // held: fall to a ring round the hole. Only matter already down in the ring is carried
+      // round it; further out the pull just twists the page into a spiral. (If everything
+      // turned by its depth times the time held, the smallest move of the hole would throw
+      // half-caught dots a long way round: that was the jumpiness when dragging.)
       float ringR = uWellR.y * (0.75 + 1.3 * r2);
       float rr = mix(d, ringR, w * sqrt(w));
-      float om = (2.6 + 4.2 * r1) * w * w;
-      float ang = atan(dv.y, dv.x) - om * uWell.w;
+      float caught = smoothstep(0.5, 0.85, w);
+      float om = (2.2 + 3.6 * r1) * caught;
+      float ang = atan(dv.y, dv.x) - 1.5 * w * w - om * uWell.w;
       vec2 radial = vec2(cos(ang), sin(ang));
       vec2 held = uWell.xy + radial * rr;
       float heat = w;
@@ -307,7 +318,7 @@ function createGL(canvas) {
     gl.uniform2f(u.uView, W, H);
     gl.uniform1f(u.uTime, f.time);
     gl.uniform1f(u.uDpr, DPR);
-    gl.uniform3f(u.uMouse, f.mouse[0], f.mouse[1], f.mouse[2]);
+    gl.uniform4f(u.uMouse, f.mouse[0], f.mouse[1], f.mouse[2], f.mouse[3]);
     gl.uniform4f(u.uWell, f.well[0], f.well[1], f.well[2], f.well[3]);
     gl.uniform2f(u.uWellR, f.wellR[0], f.wellR[1]);
     gl.uniform2f(u.uBlast, f.blast[0], f.blast[1]);

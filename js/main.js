@@ -120,7 +120,8 @@ const inkLayers = sections.map((_, i) => ({ key: `s${i}`, vis: 0, scroll: 0, fad
 const navLayer = { key: 'nav', vis: 0, scroll: 0, fade0: -1e5, fade1: -1e5 + 1 };
 const inkFx = { x: 0, y: 0, c: 0, hold: 0, blastT: -1, blastC: 0, px: 0, py: 0, pulseT: -1 };
 // streaks: ink dots stretch into streaks after a blast (skipped only on a phone that is simulating on its CPU)
-const inkFrame = { time: 0, mouse: [0, 0, 0], well: [0, 0, 0, 0], wellR: [1, 1], blast: [-1, 0], pulse: [0, 0, -1], layers: [], streaks: engine.sim === 'gpu' || !touch };
+const inkLens = { x: 0, y: 0, s: 0 };   // the lens under the pointer: trails it a little and fades in and out
+const inkFrame = { time: 0, mouse: [0, 0, 0, 0], well: [0, 0, 0, 0], wellR: [1, 1], blast: [-1, 0], pulse: [0, 0, -1], layers: [], streaks: engine.sim === 'gpu' || !touch };
 let inkDots = 0, inkMs = 0, inkMax = 0;
 
 // One dot per pixel of the canvas (which runs below the screen's own resolution on
@@ -270,17 +271,27 @@ function inkTick(dt) {
   if (!ink) return;
   paneTick();
   const w = engine.well, s = inkFx;
-  if (w.on) { s.x = w.x; s.y = w.y; s.c = w.charge; s.hold += dt; s.blastT = -1; }
+  if (w.on) {
+    // the ink follows the hole a beat behind, like something with weight
+    const k = s.c > 0.02 ? Math.min(1, dt * 14) : 1;
+    s.x += (w.x - s.x) * k; s.y += (w.y - s.y) * k;
+    s.c = w.charge; s.hold += dt * (0.3 + 0.7 * w.charge); s.blastT = -1;
+  }
   else if (s.blastT >= 0) { s.blastT += dt; if (s.blastT > 2.35) { s.blastT = -1; s.c = 0; } }   // everything is home by then
-  else if (s.c > 0) { s.c *= Math.exp(-dt * 9); s.hold += dt; if (s.c < 0.002) s.c = 0; }
+  else if (s.c > 0) { s.c *= Math.exp(-dt * 9); if (s.c < 0.002) s.c = 0; }
   if (s.pulseT >= 0) { s.pulseT += dt; if (s.pulseT > 1.4) s.pulseT = -1; }
   const live = root.classList.contains('live');
   navLayer.vis += ((live ? 1 : 0) - navLayer.vis) * Math.min(1, dt * 2.2);
 
   const f = inkFrame;
   f.time = engine.time;
-  const mOn = engine.mouse.on && engine.phase === 'live' && !(w.on && w.charge > 0.06);
-  f.mouse[0] = engine.mouse.x; f.mouse[1] = engine.mouse.y; f.mouse[2] = mOn ? engine.repel : 0;
+  const mOn = engine.mouse.on && engine.phase === 'live' && !w.on && s.c < 0.02 && s.blastT < 0;
+  const L = inkLens;
+  if (mOn && L.s < 0.01) { L.x = engine.mouse.x; L.y = engine.mouse.y; }   // appearing: start where the pointer is
+  else if (mOn) { const k = Math.min(1, dt * 16); L.x += (engine.mouse.x - L.x) * k; L.y += (engine.mouse.y - L.y) * k; }
+  L.s += ((mOn ? 1 : 0) - L.s) * Math.min(1, dt * (mOn ? 5 : 7));
+  if (L.s < 0.002) L.s = 0;
+  f.mouse[0] = L.x; f.mouse[1] = L.y; f.mouse[2] = engine.repel * 1.35; f.mouse[3] = L.s;
   f.well[0] = s.x; f.well[1] = s.y; f.well[2] = s.c; f.well[3] = s.hold;
   f.wellR[0] = (150 + 330 * s.c) * (engine.w < 640 ? 0.72 : 1); f.wellR[1] = 22 + 26 * s.c;
   f.blast[0] = s.blastT; f.blast[1] = s.blastC;

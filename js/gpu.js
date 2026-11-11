@@ -32,7 +32,8 @@ uniform vec4 uT;         // dt, time, scroll, scroll delta
 uniform vec4 uEnv;       // view w, view h, ambient drag, blend progress (-1 = holding one formation)
 const float PI = 3.14159265;
 const float STAG = 0.5;
-vec4 point(int j, int row) { return texelFetch(uForm, ivec2(j % uLay.x, row + j / uLay.x), 0); }
+// (no % here: integer modulo is one of the things some phone GLSL compilers get wrong)
+vec4 point(int j, int row) { int r = j / uLay.x; return texelFetch(uForm, ivec2(j - r * uLay.x, row + r), 0); }
 /** How far along its own trip from A to B this particle is: each leaves on its own schedule. */
 float tripOf(float stag) {
   if (uEnv.w <= 0.0) return 0.0;
