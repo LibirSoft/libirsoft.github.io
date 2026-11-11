@@ -76,9 +76,28 @@ function gpuBudget() {
 // WebGL2: particles live and move on the graphics card (gpu.js). Anything else, or
 // ?cpu, falls back to the JavaScript simulation in engine.js.
 const gl2 = createRenderer(canvas);
-let engine = null;
-if (gl2 && gl2.kind === 'webgl2' && !params.has('cpu')) {
-  try { engine = new GpuCosmos(canvas, gpuBudget(), gl2); } catch (e) { console.warn('[libir] GPU simulation unavailable, simulating in JavaScript', e); }
+let engine = null, gpuNote = '';
+// A software renderer (no usable GPU, or a blocked one) draws on the CPU: there the extra
+// work of the GPU paths is a loss, so it gets the light version: JavaScript simulation, DOM text.
+let softwareGL = false;
+if (gl2 && gl2.kind === 'webgl2') {
+  try {
+    const x = gl2.gl.getExtension('WEBGL_debug_renderer_info');
+    const name = String(x ? gl2.gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl2.gl.getParameter(gl2.gl.RENDERER));
+    softwareGL = /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+    if (softwareGL) gpuNote = `software renderer (${name.slice(0, 60)})`;
+  } catch { /* unknown is fine */ }
+}
+if (gl2 && gl2.kind === 'webgl2' && !params.has('cpu') && (!softwareGL || params.has('gpu'))) {
+  try {
+    engine = new GpuCosmos(canvas, gpuBudget(), gl2);
+    engine.selfTest();
+  } catch (e) {
+    console.warn('[libir] GPU simulation unavailable, simulating in JavaScript', e);
+    gpuNote = String((e && e.message) || e).slice(0, 140);
+    engine = null;
+    gl2.onReinit = null;
+  }
 }
 if (!engine) engine = new Cosmos(canvas, budget(), gl2);
 if (engine.kind === '2d') engine.setActive(Math.min(engine.N, 4000));
@@ -93,7 +112,7 @@ document.getElementById('pcount').textContent = engine.active.toLocaleString('en
 // uploaded to the GPU and animated there (see renderer.js). The DOM stays where it is,
 // invisible, for layout, links, selection and screen readers. Per frame the page only
 // hands over a few numbers: how visible each cloud is, where the mouse and the hole are.
-const ink = !reduced && !params.has('noink') && engine.kind === 'webgl2' && engine.renderer.ink.ok ? engine.renderer.ink : null;   // ?noink keeps DOM text, for comparing
+const ink = !reduced && !params.has('noink') && (!softwareGL || params.has('gpu')) && engine.kind === 'webgl2' && engine.renderer.ink.ok ? engine.renderer.ink : null;   // ?noink keeps DOM text, for comparing
 if (ink) { root.classList.add('ink'); engine.fadeA = 46; engine.fadeB = 82; }
 const INK_SKIP = '[data-form="text"], .ghost';
 const inkVis = sections.map(() => 0);
@@ -802,22 +821,29 @@ if (sayIn) {
 
 /* ───────────────────────────── the big bang ───────────────────────────── */
 
+let askedAt = 0;
 function triggerBang() {
-  if (engine.phase !== 'intro') return;
+  if (engine.phase !== 'intro' || rescued) return;
+  if (!askedAt) {
+    // whatever happens next, nobody is left looking at the sphere: if the universe has not
+    // opened a few seconds after it was asked to, the page gives up on it and shows itself
+    askedAt = performance.now();
+    setTimeout(() => { if (engine.phase !== 'live') rescue(new Error(`the intro did not open (${engine.phase}${ready ? '' : ', page not ready'})`)); }, 6000);
+  }
   if (!ready) { pendingBang = true; return; }
   engine.implode();
   root.classList.add('imploding');
-  setTimeout(() => {
+  setTimeout(guard(() => {
     engine.bang();
     flashAt(engine.intro.cx, engine.intro.cy);
-    setTimeout(() => {
+    setTimeout(guard(() => {
       engine.phase = 'live';
       liveAt = engine.time;
       engine.setSegment(HERO, HERO, 0);
       engine.assign({ spread: 0.55, swirl: 0.45, stiffness: 0.6 });
-    }, 420);
+    }), 420);
     setTimeout(() => root.classList.remove('intro', 'imploding'), 1000);
-  }, 340);
+  }), 340);
 }
 
 let armedAt = performance.now() + 650;
@@ -989,6 +1015,12 @@ const perf = {
 };
 
 function loop(now) {
+  if (degraded) return;
+  try { frame(now); } catch (e) { rescue(e); return; }
+  if (!degraded) requestAnimationFrame(loop);
+}
+
+function frame(now) {
   const raw = (now - last) / 1000;
   last = now;
   const dt = Math.min(raw, 1 / 30);
@@ -1009,9 +1041,36 @@ function loop(now) {
   updateSections();
   perf.js += performance.now() - j0; perf.jsN++;
   adapt(raw, now);
-  if (!degraded) requestAnimationFrame(loop);
 }
 let degraded = false;
+
+/* ───────────────────────────── rescue ───────────────────────────── */
+
+// The page is ordinary HTML underneath, and it must never be held hostage by its own
+// effects. Any error in the frame loop, in setup or in the bang, or an intro that fails
+// to open, ends here: the canvas goes away and the plain page is shown, as if the script
+// had never loaded. The reason is kept (footer, ?debug) so a broken device can be traced.
+let rescued = false, lastError = '';
+function rescue(err) {
+  if (rescued) return;
+  rescued = true;
+  degraded = true;
+  lastError = String((err && (err.message || err.reason)) || err || 'unknown error').slice(0, 180);
+  console.error('[libir] showing the plain page:', err);
+  try { clearSectionOpacity(); } catch { /* nothing to clear */ }
+  root.classList.remove('js', 'intro', 'imploding', 'ink', 'holding', 'measuring', 'shake');
+  root.classList.add('rescued');
+  for (const el of document.querySelectorAll('canvas, .fx, .panes')) el.style.display = 'none';
+  const foot = document.querySelector('.foot');
+  if (foot) {
+    const note = document.createElement('span');
+    note.textContent = `The particles are off on this device: ${lastError}`;
+    foot.append(note);
+  }
+}
+const guard = (fn) => (...args) => { try { return fn(...args); } catch (e) { rescue(e); } };
+addEventListener('error', (e) => { if (engine.phase !== 'live' && /\/js\//.test(e.filename || '')) rescue(e.error || e.message); });
+addEventListener('unhandledrejection', (e) => { if (engine.phase !== 'live') rescue(e.reason); });
 
 // Keyboard focus needs a visible ring, and the DOM that would draw one is invisible:
 // a single overlay follows whatever has :focus-visible.
@@ -1204,7 +1263,7 @@ async function boot() {
   await Promise.all([fontsReady(), imagesReady()]);
   rebuild();
   ready = true;
-  if (pendingBang) triggerBang();
+  if (pendingBang) guard(triggerBang)();
 
   // text can reflow without a window resize (late fonts, text-only zoom): rebuild then too
   let roTimer = 0, roH = document.querySelector('main').offsetHeight;
@@ -1237,7 +1296,9 @@ async function boot() {
   });
 }
 
-boot();
+boot().catch(rescue);
+// setup itself must not hang either (fonts, the logo and the first build are all bounded)
+setTimeout(() => { if (!ready && !reduced) rescue(new Error('setup did not finish')); }, 9000);
 
 /* ───────────────────────────── debug hook (used by the screenshot harness) ───────────────────────────── */
 
@@ -1257,6 +1318,8 @@ Object.defineProperty(window, '__libir', {
     get formed() { return +engine.formed.toFixed(3); },
     get renderer() { return engine.kind; },
     get sim() { return engine.sim; },
+    get note() { return gpuNote || null; },
+    get error() { return lastError || null; },
     get time() { return +engine.time.toFixed(2); },
     get buildMs() { return Math.round(buildMs); },
     get ink() { return ink ? { dots: inkDots, drawn: ink.drawn, ms: Math.round(inkMs), slowest: Math.round(inkMax), pending: inkQueue.length } : null; },
@@ -1273,6 +1336,6 @@ if (params.has('debug')) {
   document.body.append(hud);
   setInterval(() => {
     const c = (engine.renderer && engine.renderer.canvas) || canvas;
-    hud.textContent = `${Math.round(perf.fps)} fps · ${engine.active} particles · dpr ${canvasDpr()} · ${c.width}×${c.height} · step ${perf.steps}`;
+    hud.textContent = `${Math.round(perf.fps)} fps · ${engine.active} particles · ${engine.sim}${ink ? '+ink' : ''} · dpr ${canvasDpr()} · ${c.width}×${c.height} · step ${perf.steps} · ${engine.phase}${ready ? '' : ' (not ready)'}${gpuNote ? ' · ' + gpuNote : ''}${lastError ? ' · ERROR ' + lastError : ''}`;
   }, 500);
 }

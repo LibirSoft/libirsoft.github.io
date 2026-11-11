@@ -471,6 +471,42 @@ export class GpuCosmos {
     if (err) throw new Error('GL error ' + err);
   }
 
+  /**
+   * Prove, before anything depends on it, that this device really runs the simulation:
+   * a few passes on a known sphere, read back and checked, and timed. Drivers differ, and
+   * a GPU path that silently writes rubbish or crawls is worse than not having one, so a
+   * failure here throws and the page uses engine.js instead.
+   */
+  selfTest() {
+    const I = this.intro, keep = [this.w, this.h, I.cx, I.cy, I.R, I.spin];
+    this.w = 800; this.h = 600; I.cx = 400; I.cy = 300; I.R = 100;
+    try {
+      this.startIntro();
+      this.simulate(1 / 60);
+      this.pull();                       // also makes the card finish compiling the shaders
+      const t0 = performance.now();
+      for (let k = 0; k < 4; k++) this.simulate(1 / 60);
+      this.pull();
+      const ms = performance.now() - t0;
+      const stride = Math.max(1, (this.active / 97) | 0);
+      let seen = 0, good = 0, spread = 0;
+      for (let i = 0; i < this.active; i += stride) {
+        if (this.mode[i] !== INTRO) continue;
+        seen++;
+        // every one of them must be on the sphere (a disc of radius 100 on screen), and drawable
+        const d = Math.hypot(this.dyn[i * DYN + X] - 400, this.dyn[i * DYN + Y] - 300);
+        const size = this.dyn[i * DYN + 16], alpha = this.dyn[i * DYN + 15];
+        if (Number.isFinite(d) && d < 125 && size > 0 && size < 20 && alpha >= 0 && alpha < 20) good++;
+        if (d > 30) spread++;
+      }
+      if (this.gl.getError()) throw new Error('GL error during the self-test');
+      if (!seen || good < seen || spread < seen * 0.4) throw new Error(`simulation self-test: ${good}/${seen} particles came back right (${spread} spread out)`);
+      if (ms > 120) throw new Error(`simulation self-test: four steps took ${Math.round(ms)} ms`);
+    } finally {
+      [this.w, this.h, I.cx, I.cy, I.R, I.spin] = keep;
+    }
+  }
+
   /** After a lost context everything on the card is gone: rebuild it and let the particles re-form. */
   reinit() {
     this.initGL();
